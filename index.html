@@ -1,49 +1,321 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Bowling League Tracker • Big Ben Plan</title>
-  <style>
-    :root{--bg:#0e1116;--card:#171a21;--fg:#e7ecf3;--muted:#9fb2cc;}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:960px;margin:0 auto;padding:32px}
-    .card{background:var(--card);border-radius:16px;padding:24px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
-    h1,h2{margin:0 0 12px} h1{font-size:28px} h2{font-size:20px;color:var(--muted)}
-    p{color:#cfe0fb} a.button{display:inline-block;margin:8px 12px 0 0;padding:10px 14px;border-radius:10px;background:#2c84ff;color:white;text-decoration:none;font-weight:600}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
-    @media (min-width:900px){.grid{grid-template-columns:1.2fr .8fr}}
-    img{width:100%;height:auto;border-radius:12px}
-    .foot{margin-top:18px;color:var(--muted);font-size:13px}
-    code{background:#0b0e13;padding:2px 6px;border-radius:6px}
-    ul{margin:8px 0 0 20px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bowling League Tracker • Big Ben</title>
+<style>
+  :root{--bg:#0e1116;--card:#171a21;--fg:#e7ecf3;--muted:#9fb2cc;--accent:#2c84ff}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:20px}
+  .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  h1{margin:0 0 8px;font-size:24px} h2{margin:12px 0 8px;font-size:18px;color:var(--muted)}
+  img{width:100%;height:auto;border-radius:12px}
+  .tabs{display:flex;gap:8px;margin:12px 0}
+  .tab{flex:1;text-align:center;padding:10px 12px;border-radius:10px;background:#0b0e13;color:#a9bfdc;cursor:pointer}
+  .tab.active{background:var(--accent);color:#fff;font-weight:700}
+  .grid{display:grid;gap:10px}
+  @media (min-width:900px){.grid-2{grid-template-columns:1.2fr .8fr}}
+  label{font-size:14px;color:#cfe0fb;display:block;margin-bottom:4px}
+  input,select,textarea{width:100%;background:#0b0e13;border:1px solid #2a3140;border-radius:10px;color:var(--fg);padding:10px}
+  .row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .row .frame{background:#0b0e13;border:1px solid #2a3140;border-radius:10px;padding:8px}
+  .row small{color:#8ea8c8}
+  .btn{display:inline-block;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .btn.ghost{background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb}
+  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{border-bottom:1px solid #222a36;padding:8px;text-align:left;font-size:14px}
+  .muted{color:#9fb2cc}
+  .foot{margin-top:10px;color:#9fb2cc;font-size:13px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;font-size:12px}
+  .hint{font-size:13px;color:#9fb2cc}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Bowling League Tracker • Big Ben (44 ft)</h1>
-      <p>This mini site gives you a visual lane plan tailored for lower revs / “baby hook” and a Google Sheets–compatible per‑game entry sheet that auto‑scores and rolls into your master tracker.</p>
-      <div class="grid">
+<div class="wrap">
+  <div class="card">
+    <h1>Bowling League Tracker • Big Ben (44 ft)</h1>
+
+    <div class="tabs">
+      <div class="tab active" data-panel="plan">Lane Plan</div>
+      <div class="tab" data-panel="entry">Score Entry</div>
+      <div class="tab" data-panel="history">History</div>
+    </div>
+
+    <!-- PLAN PANEL -->
+    <section id="plan" class="panel">
+      <div class="grid grid-2">
         <div>
-          <h2>Lane Plan</h2>
-          <img src="assets/BigBen-LanePlan.png" alt="Big Ben lane plan with Forge and Jackal lines">
-          <p class="foot">Solid line: Forge start (~13 → 8 → pocket). Dashed line: Jackal transition (~17 → 10 → pocket). Blue zone = oil to 44 ft.</p>
+          <img src="assets/BigBen-LanePlan.png" alt="Big Ben lane plan">
+          <p class="foot">Solid: Forge (~13 → 8 → pocket). Dashed: Jackal (~17 → 10 → pocket). Blue = oil to 44 ft.</p>
+          <div class="flex">
+            <a class="btn" href="assets/BigBen-LanePlan.png" download>Download PNG</a>
+            <a class="btn ghost" href="sheets/League Night Entry (import to your tracker).xlsx" download>Entry Sheet (XLSX)</a>
+          </div>
         </div>
         <div>
-          <h2>Downloads</h2>
-          <p><a class="button" href="assets/BigBen-LanePlan.png" download>Download Lane Plan (PNG)</a></p>
-          <p><a class="button" href="sheets/League Night Entry (import to your tracker).xlsx" download>Download Entry Sheet (XLSX)</a></p>
-          <h2 style="margin-top:24px">How to use</h2>
-          <ul>
-            <li>Open your master tracker in Google Sheets.</li>
-            <li>File → Import → Upload the entry sheet → <em>Insert new sheet(s)</em>.</li>
-            <li>Enter date (B3), score Game 1–3; copy the summary block into <strong>Main</strong> next empty row.</li>
-          </ul>
+          <h2>Tonight’s Quick Notes</h2>
+          <label for="qNotes">Optional — saved on this device</label>
+          <textarea id="qNotes" rows="6" placeholder="e.g., Start Forge 13→8. If flat 10s by frame 5, move 2-and-1 or switch to Jackal."></textarea>
+          <div class="flex">
+            <button class="btn" id="saveQuickNotes">Save Notes</button>
+            <span class="hint" id="quickSaved"></span>
+          </div>
         </div>
       </div>
-      <div class="foot">Build date: 2025-09-17</div>
-    </div>
+    </section>
+
+    <!-- ENTRY PANEL -->
+    <section id="entry" class="panel" style="display:none">
+      <h2>Score Entry (X, /, -, 0–9) — Auto-scoring</h2>
+      <div class="grid">
+        <div class="flex">
+          <div>
+            <label for="date">Date</label>
+            <input id="date" type="date">
+          </div>
+          <div>
+            <label for="gameNum">Game</label>
+            <select id="gameNum">
+              <option value="1">Game 1</option>
+              <option value="2">Game 2</option>
+              <option value="3">Game 3</option>
+            </select>
+          </div>
+          <div>
+            <label>Total</label>
+            <div class="pill" id="gameTotal">0</div>
+          </div>
+        </div>
+
+        <!-- 10 frames -->
+        <div class="row" id="framesRow"></div>
+
+        <div>
+          <label for="notes">Notes for this game (saved with entry)</label>
+          <textarea id="notes" rows="4" placeholder="e.g., Flat 10s frame 6, moved 2-1, carry improved."></textarea>
+        </div>
+
+        <div class="flex">
+          <button class="btn" id="saveGame">Save Game</button>
+          <button class="btn ghost" id="resetGame">Clear</button>
+          <span class="hint">Tip: Enter 10th as X/X/X or 9/9 etc.</span>
+        </div>
+
+        <div class="flex">
+          <div><span class="pill" id="g1Pill">G1: —</span></div>
+          <div><span class="pill" id="g2Pill">G2: —</span></div>
+          <div><span class="pill" id="g3Pill">G3: —</span></div>
+          <div><span class="pill" id="seriesPill">Series: —</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY PANEL -->
+    <section id="history" class="panel" style="display:none">
+      <h2>History (saved on this device)</h2>
+      <table id="histTable">
+        <thead>
+          <tr><th>Date</th><th>G1</th><th>G2</th><th>G3</th><th>High</th><th>Low</th><th>Series</th><th>Copy</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="flex" style="margin-top:8px">
+        <button class="btn ghost" id="exportCSV">Export CSV</button>
+        <input type="file" id="importCSV" accept=".csv" style="display:none" />
+        <button class="btn ghost" id="importBtn">Import CSV</button>
+        <button class="btn" id="clearAll">Clear All (device)</button>
+      </div>
+      <p class="foot">“Copy” puts a tab-separated row on your clipboard (Date, G1, G2, G3, High, Low, Series) ready to paste into your **Main** sheet.</p>
+    </section>
   </div>
+</div>
+
+<script>
+/* ---------- tabs ---------- */
+const tabs=[...document.querySelectorAll('.tab')];
+tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+  document.getElementById(t.dataset.panel).style.display='block';
+});
+
+/* ---------- frames UI ---------- */
+const framesRow=document.getElementById('framesRow');
+function buildFrames(){
+  framesRow.innerHTML='';
+  for(let f=1; f<=10; f++){
+    const box=document.createElement('div'); box.className='frame';
+    box.innerHTML=`
+      <small>Frame ${f}</small>
+      <div class="flex" style="margin-top:6px">
+        <input data-f="${f}" data-r="1" maxlength="1" placeholder="R1">
+        <input data-f="${f}" data-r="2" maxlength="1" placeholder="R2">
+        <input data-f="${f}" data-r="3" maxlength="1" placeholder="R3" ${f<10?'disabled':''}>
+      </div>`;
+    framesRow.appendChild(box);
+  }
+}
+buildFrames();
+
+/* ---------- scoring ---------- */
+function symToPins(sym, prev=0){
+  if(!sym) return 0;
+  sym=sym.toUpperCase();
+  if(sym==='X') return 10;
+  if(sym==='/') return Math.max(0,10-prev);
+  if(sym==='-') return 0;
+  const n=parseInt(sym,10);
+  return isNaN(n)?0:n;
+}
+function readGame(){
+  const rolls=[];
+  for(let f=1; f<=10; f++){
+    const r1=document.querySelector(`input[data-f="${f}"][data-r="1"]`).value.trim().toUpperCase();
+    const r2=document.querySelector(`input[data-f="${f}"][data-r="2"]`).value.trim().toUpperCase();
+    const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.trim().toUpperCase();
+    if(f<10){
+      if(r1==='X'){ rolls.push(10); }
+      else{
+        const p1=symToPins(r1);
+        const p2=symToPins(r2,p1);
+        rolls.push(p1,p2);
+      }
+    }else{
+      // 10th
+      const p1=symToPins(r1);
+      const p2=(r1==='X')?symToPins(r2):symToPins(r2,p1);
+      const p3=(r2==='X'||r2==='/'||r1==='X')?symToPins(r3,(r2==='/')?0:p2):0;
+      // emulate raw rolls for scoring
+      if(r1==='X'){ rolls.push(10);
+        if(r2==='X'){ rolls.push(10); rolls.push(p3); }
+        else { rolls.push(p2); rolls.push(p3); }
+      } else {
+        rolls.push(p1);
+        if(r2==='/'){ rolls.push(10-p1); rolls.push(p3); }
+        else { rolls.push(p2); }
+      }
+    }
+  }
+  return rolls;
+}
+function scoreGame(){
+  const rolls=readGame();
+  let i=0, total=0;
+  for(let f=1; f<=10; f++){
+    if(rolls[i]===10 && f<10){ // strike
+      total += 10 + (rolls[i+1]??0) + (rolls[i+2]??0);
+      i += 1;
+    } else {
+      const frame = (rolls[i]??0) + (rolls[i+1]??0);
+      if(frame===10 && f<10){ total += 10 + (rolls[i+2]??0); }
+      else { total += frame; }
+      i += 2;
+    }
+  }
+  document.getElementById('gameTotal').textContent = total;
+  return total;
+}
+framesRow.addEventListener('input', scoreGame);
+
+/* ---------- storage & series ---------- */
+const LSKEY='bowling.tracker.v1';
+const $ = sel => document.querySelector(sel);
+const pills = { g1:$('#g1Pill'), g2:$('#g2Pill'), g3:$('#g3Pill'), series:$('#seriesPill') };
+
+function loadAll(){ try{ return JSON.parse(localStorage.getItem(LSKEY))||[] } catch{ return [] } }
+function saveAll(arr){ localStorage.setItem(LSKEY, JSON.stringify(arr)); renderHistory(); }
+
+function upsertNight(date, gnum, total, notes){
+  const all=loadAll();
+  let row=all.find(r=>r.date===date);
+  if(!row){ row={date, g1:null, g2:null, g3:null, notes:{}}; all.push(row); }
+  row['g'+gnum]=total;
+  row.notes['g'+gnum]=notes||'';
+  // derive
+  const nums=[row.g1||0,row.g2||0,row.g3||0];
+  row.series = nums.reduce((a,b)=>a+b,0);
+  row.high = Math.max(...nums);
+  row.low  = Math.min(...nums.filter(n=>n>0).concat([0]));
+  saveAll(all);
+  updatePills(date);
+}
+function updatePills(date){
+  const row = loadAll().find(r=>r.date===date);
+  pills.g1.textContent = 'G1: ' + (row?.g1??'—');
+  pills.g2.textContent = 'G2: ' + (row?.g2??'—');
+  pills.g3.textContent = 'G3: ' + (row?.g3??'—');
+  pills.series.textContent = 'Series: ' + (row?.series??'—');
+}
+
+/* ---------- entry actions ---------- */
+$('#saveGame').onclick = ()=>{
+  const date = $('#date').value || new Date().toISOString().slice(0,10);
+  const gnum = $('#gameNum').value;
+  const total = scoreGame();
+  const notes = $('#notes').value.trim();
+  upsertNight(date, gnum, total, notes);
+  alert(`Saved ${date} • Game ${gnum}: ${total}`);
+};
+$('#resetGame').onclick = ()=>{
+  document.querySelectorAll('#framesRow input').forEach(i=>i.value='');
+  $('#notes').value='';
+  scoreGame();
+};
+$('#saveQuickNotes').onclick = ()=>{
+  localStorage.setItem('bowling.quicknotes', $('#qNotes').value);
+  $('#quickSaved').textContent = 'Saved ✔';
+  setTimeout(()=>$('#quickSaved').textContent='',1500);
+};
+$('#qNotes').value = localStorage.getItem('bowling.quicknotes')||'';
+
+/* ---------- history table ---------- */
+function renderHistory(){
+  const tb = document.querySelector('#histTable tbody');
+  const rows = loadAll().sort((a,b)=> (a.date<b.date?-1:1));
+  tb.innerHTML = rows.map(r=>`
+    <tr>
+      <td>${r.date}</td>
+      <td>${r.g1??''}</td>
+      <td>${r.g2??''}</td>
+      <td>${r.g3??''}</td>
+      <td>${r.high??''}</td>
+      <td>${r.low??''}</td>
+      <td><strong>${r.series??''}</strong></td>
+      <td><button class="btn ghost" data-copy="${r.date}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}">Copy</button></td>
+    </tr>`).join('');
+}
+renderHistory();
+document.querySelector('#histTable').onclick = e=>{
+  const btn = e.target.closest('button[data-copy]');
+  if(!btn) return;
+  navigator.clipboard.writeText(btn.dataset.copy).then(()=> btn.textContent='Copied ✓');
+};
+$('#exportCSV').onclick = ()=>{
+  const rows = loadAll();
+  const header = 'Date,G1,G2,G3,High,Low,Series\n';
+  const body = rows.map(r=>[r.date,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0].join(',')).join('\n');
+  const blob = new Blob([header+body], {type:'text/csv'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bowling-history.csv'; a.click();
+};
+$('#importBtn').onclick = ()=> $('#importCSV').click();
+$('#importCSV').onchange = async (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const text = await file.text();
+  const lines = text.trim().split(/\r?\n/).slice(1);
+  const rows = loadAll();
+  for(const line of lines){
+    const [date,g1,g2,g3,high,low,series] = line.split(',');
+    let r = rows.find(x=>x.date===date);
+    if(!r){ r={date,g1:+g1||0,g2:+g2||0,g3:+g3||0,notes:{}}; rows.push(r); }
+    else { r.g1=+g1||0; r.g2=+g2||0; r.g3=+g3||0; }
+    r.high=+high||Math.max(r.g1,r.g2,r.g3);
+    r.low =+low || Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
+    r.series=+series || (r.g1+r.g2+r.g3);
+  }
+  saveAll(rows);
+};
+document.getElementById('date').value = new Date().toISOString().slice(0,10);
+</script>
 </body>
 </html>
