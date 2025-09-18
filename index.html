@@ -74,6 +74,46 @@
     -webkit-box-shadow:0 0 0px 1000px #0e1622 inset;
     box-shadow:0 0 0px 1000px #0e1622 inset;
   }
+  /* ---- FINAL LEGIBILITY OVERRIDES ---- */
+.frameCard .shots .shot{
+  color:#ffffff !important;              /* force bright text */
+  -webkit-text-fill-color:#ffffff !important; /* iOS/Safari */
+  background:#0f1624 !important;         /* slightly lighter box */
+  border:1px solid #3e4a66 !important;   /* clearer edge */
+  font-size:18px !important;             /* bigger digits */
+  font-weight:900 !important;
+  line-height:22px !important;
+  text-transform:uppercase;
+  caret-color:#ffffff;
+  font-variant-numeric: tabular-nums;    /* uniform widths */
+  appearance:none;                       /* ignore UA quirks */
+}
+.frameCard .shots.triple .shot{          /* 10th frame third box too */
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  background:#0f1624 !important;
+}
+
+/* cumulative total box per frame */
+.frameTotal{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  font-size:18px !important;
+  font-weight:900 !important;
+  background:#111a2a !important;
+  border:1px solid #3e4a66 !important;
+}
+
+/* stop OS/browser auto dark-theming from inverting colors */
+input, select, textarea { color-scheme: light; }
+
+/* Safari/iOS autofill */
+input:-webkit-autofill{
+  -webkit-text-fill-color:#ffffff !important;
+  -webkit-box-shadow:0 0 0px 1000px #0f1624 inset !important;
+  box-shadow:0 0 0px 1000px #0f1624 inset !important;
+}
+
 </style>
 </head>
 <body>
