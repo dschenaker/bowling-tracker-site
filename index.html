@@ -5,31 +5,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Bowling League Tracker • Big Ben</title>
 <style>
-  :root{--bg:#0e1116;--card:#171a21;--fg:#e7ecf3;--muted:#9fb2cc;--accent:#2c84ff}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:960px;margin:0 auto;padding:20px}
-  .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
-  h1{margin:0 0 8px;font-size:24px} h2{margin:12px 0 8px;font-size:18px;color:var(--muted)}
-  img{width:100%;height:auto;border-radius:12px}
-  .tabs{display:flex;gap:8px;margin:12px 0}
-  .tab{flex:1;text-align:center;padding:10px 12px;border-radius:10px;background:#0b0e13;color:#a9bfdc;cursor:pointer}
-  .tab.active{background:var(--accent);color:#fff;font-weight:700}
-  .grid{display:grid;gap:10px}
-  @media (min-width:900px){.grid-2{grid-template-columns:1.2fr .8fr}}
-  label{font-size:14px;color:#cfe0fb;display:block;margin-bottom:4px}
-  input,select,textarea{width:100%;background:#0b0e13;border:1px solid #2a3140;border-radius:10px;color:var(--fg);padding:10px}
-  .row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-  .row .frame{background:#0b0e13;border:1px solid #2a3140;border-radius:10px;padding:8px}
-  .row small{color:#8ea8c8}
-  .btn{display:inline-block;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-  .btn.ghost{background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb}
-  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  table{width:100%;border-collapse:collapse;margin-top:12px}
-  th,td{border-bottom:1px solid #222a36;padding:8px;text-align:left;font-size:14px}
-  .muted{color:#9fb2cc}
-  .foot{margin-top:10px;color:#9fb2cc;font-size:13px}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;font-size:12px}
-  .hint{font-size:13px;color:#9fb2cc}
+/* Scoresheet look */
+#framesRow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media (min-width:900px){#framesRow{grid-template-columns:repeat(10,1fr)}}
+
+.frameCard{
+  background:#0b0e13;border:1px solid #2a3140;border-radius:10px;
+  padding:8px; position:relative; min-height:96px;
+}
+.frameHead{display:flex;justify-content:space-between;align-items:flex-start}
+.frameNum{font-weight:700;color:#cfe0fb}
+
+.shots{display:grid;grid-template-columns:repeat(2,22px);gap:4px}
+.shots.triple{grid-template-columns:repeat(3,22px)}
+.shot{
+  width:22px;height:22px;text-align:center;font-weight:700;
+  background:#121722;border:1px solid #2a3140;border-radius:4px;color:#fff
+}
+
+.frameTotal{
+  position:absolute;left:8px;right:8px;bottom:8px;
+  height:30px;border:1px solid #2a3140;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#e7ecf3;background:#111623
+}
+
 </style>
 </head>
 <body>
@@ -143,19 +143,25 @@ tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.c
 /* ---------- frames UI ---------- */
 const framesRow=document.getElementById('framesRow');
 function buildFrames(){
-  framesRow.innerHTML='';
-  for(let f=1; f<=10; f++){
-    const box=document.createElement('div'); box.className='frame';
-    box.innerHTML=`
-      <small>Frame ${f}</small>
-      <div class="flex" style="margin-top:6px">
-        <input data-f="${f}" data-r="1" maxlength="1" placeholder="R1">
-        <input data-f="${f}" data-r="2" maxlength="1" placeholder="R2">
-        <input data-f="${f}" data-r="3" maxlength="1" placeholder="R3" ${f<10?'disabled':''}>
-      </div>`;
+  framesRow.innerHTML = '';
+  for (let f = 1; f <= 10; f++) {
+    const box = document.createElement('div');
+    box.className = 'frameCard';
+    box.innerHTML = `
+      <div class="frameHead">
+        <span class="frameNum">${f}</span>
+        <div class="shots ${f===10?'triple':''}">
+          <input class="shot" data-f="${f}" data-r="1" maxlength="1">
+          <input class="shot" data-f="${f}" data-r="2" maxlength="1">
+          <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${f<10?'disabled':''}>
+        </div>
+      </div>
+      <div class="frameTotal" data-ft="${f}"> </div>
+    `;
     framesRow.appendChild(box);
   }
 }
+
 buildFrames();
 
 /* ---------- scoring ---------- */
@@ -200,22 +206,66 @@ function readGame(){
   return rolls;
 }
 function scoreGame(){
-  const rolls=readGame();
-  let i=0, total=0;
-  for(let f=1; f<=10; f++){
-    if(rolls[i]===10 && f<10){ // strike
-      total += 10 + (rolls[i+1]??0) + (rolls[i+2]??0);
-      i += 1;
+  const rolls = readGame();
+  let i = 0, total = 0;
+
+  for (let f = 1; f <= 10; f++) {
+    // --- Frames 1..9 behave normally ---
+    if (f < 10) {
+      if (rolls[i] === 10) { // strike
+        total += 10 + (rolls[i+1] ?? 0) + (rolls[i+2] ?? 0);
+        i += 1;
+      } else {
+        const frame = (rolls[i] ?? 0) + (rolls[i+1] ?? 0);
+        if (frame === 10) { // spare
+          total += 10 + (rolls[i+2] ?? 0);
+        } else {
+          total += frame;
+        }
+        i += 2;
+      }
+      continue;
+    }
+function renderFrameTotals(){
+  // crude cumulative renderer using the same logic as scoreGame()
+  const rolls = readGame();
+  let i = 0, total = 0;
+  for (let f = 1; f <= 10; f++) {
+    let add = 0;
+    if (f < 10) {
+      if (rolls[i] === 10) { add = 10 + (rolls[i+1]??0) + (rolls[i+2]??0); i += 1; }
+      else {
+        const frame = (rolls[i]??0) + (rolls[i+1]??0);
+        add = (frame===10) ? 10 + (rolls[i+2]??0) : frame; i += 2;
+      }
     } else {
-      const frame = (rolls[i]??0) + (rolls[i+1]??0);
-      if(frame===10 && f<10){ total += 10 + (rolls[i+2]??0); }
-      else { total += frame; }
-      i += 2;
+      const a=rolls[i]??0, b=rolls[i+1]??0, c=rolls[i+2]??0;
+      add = (a===10 || a+b===10) ? a+b+c : a+b;
+    }
+    total += add;
+    const cell = document.querySelector(`.frameTotal[data-ft="${f}"]`);
+    if (cell) cell.textContent = total ? String(total) : ' ';
+  }
+}
+
+    // --- Frame 10: sum all legal balls (3rd only if strike/spare) ---
+    const a = rolls[i]   ?? 0;
+    const b = rolls[i+1] ?? 0;
+    const c = rolls[i+2] ?? 0;
+
+    if (a === 10) {              // X..
+      total += a + b + c;
+    } else if (a + b === 10) {   // spare
+      total += a + b + c;
+    } else {                     // open
+      total += a + b;
     }
   }
+
   document.getElementById('gameTotal').textContent = total;
   return total;
 }
+
 framesRow.addEventListener('input', scoreGame);
 
 /* ---------- storage & series ---------- */
