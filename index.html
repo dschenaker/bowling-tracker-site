@@ -131,20 +131,43 @@
           <textarea id="notes" rows="4" placeholder="e.g., Flat 10s frame 6, moved 2-1, carry improved."></textarea>
         </div>
 
-        <div class="flex">
-          <button class="btn" id="saveGame">Save Game</button>
-          <button class="btn ghost" id="resetGame">Clear</button>
-          <span class="hint">Tip: Enter 10th as X/X/X or 9/9 etc.</span>
-        </div>
+          <div class="flex">
+            <button class="btn" id="saveGame">Save Game</button>
+            <button class="btn ghost" id="resetGame">Clear</button>
+            <span class="hint">Tip: Enter 10th as X/X/X or 9/9 etc.</span>
+          </div>
 
-        <div class="flex">
-          <div><span class="pill" id="g1Pill">G1: —</span></div>
-          <div><span class="pill" id="g2Pill">G2: —</span></div>
-          <div><span class="pill" id="g3Pill">G3: —</span></div>
-          <div><span class="pill" id="seriesPill">Series: —</span></div>
+          <div class="flex">
+            <div><span class="pill" id="g1Pill">G1: —</span></div>
+            <div><span class="pill" id="g2Pill">G2: —</span></div>
+            <div><span class="pill" id="g3Pill">G3: —</span></div>
+            <div><span class="pill" id="seriesPill">Series: —</span></div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <div class="flex">
+    <div>
+      <label for="date">Date</label>
+      <input id="date" type="date">
+    </div>
+    <div>
+      <label for="gameNum">Game</label>
+      <select id="gameNum">
+        <option value="1">Game 1</option>
+        <option value="2">Game 2</option>
+        <option value="3">Game 3</option>
+      </select>
+    </div>
+    <div>
+      <label>Total</label>
+      <div class="pill" id="gameTotal">0</div>
+    </div>
+
+    <!-- NEW -->
+    <button class="btn ghost" id="newNight" type="button">New Night</button>
+    <button class="btn ghost" id="clearNight" type="button">Clear Night</button>
+  </div>
 
     <!-- HISTORY PANEL -->
     <section id="history" class="panel" style="display:none">
@@ -302,6 +325,75 @@ renderFrameTotals();
 }
 
 framesRow.addEventListener('input', scoreGame);
+
+/* ---------- helpers to clear/reset ---------- */
+function clearFrames() {
+  document.querySelectorAll('#framesRow input').forEach(i => { i.value = ''; });
+  document.getElementById('notes').value = '';
+  document.getElementById('gameTotal').textContent = '0';
+  renderFrameTotals && renderFrameTotals(); // if you added frame totals
+}
+
+function refreshPillsFor(dateStr){
+  updatePills(dateStr);
+  // If nothing saved yet for this date, show dashes
+  const row = loadAll().find(r => r.date === dateStr);
+  if (!row) {
+    document.getElementById('g1Pill').textContent = 'G1: —';
+    document.getElementById('g2Pill').textContent = 'G2: —';
+    document.getElementById('g3Pill').textContent = 'G3: —';
+    document.getElementById('seriesPill').textContent = 'Series: —';
+  }
+}
+
+/* ---------- reset when changing Game ---------- */
+document.getElementById('gameNum').addEventListener('change', () => {
+  clearFrames();
+});
+
+/* ---------- reset (and sync pills) when changing Date ---------- */
+document.getElementById('date').addEventListener('change', (e) => {
+  clearFrames();
+  refreshPillsFor(e.target.value);
+});
+
+/* ---------- New Night (set today + clear everything) ---------- */
+document.getElementById('newNight').onclick = () => {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('date').value = today;
+  document.getElementById('gameNum').value = '1';
+  clearFrames();
+  refreshPillsFor(today);
+};
+
+/* ---------- Clear Night (delete saved row for this date) ---------- */
+document.getElementById('clearNight').onclick = () => {
+  const d = document.getElementById('date').value || new Date().toISOString().slice(0,10);
+  if (!confirm(`Delete saved scores for ${d}? (This only clears data on this device)`)) return;
+  const all = loadAll().filter(r => r.date !== d);
+  saveAll(all);               // re-renders history
+  clearFrames();
+  refreshPillsFor(d);         // will show dashes now
+  alert('Night cleared.');
+};
+
+/* ---------- optional: auto-advance game after saving ---------- */
+const originalSaveGame = document.getElementById('saveGame').onclick;
+document.getElementById('saveGame').onclick = () => {
+  // call your existing save logic
+  const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
+  const gnum = document.getElementById('gameNum').value;
+  const total = scoreGame();
+  const notes = document.getElementById('notes').value.trim();
+  upsertNight(date, gnum, total, notes);
+  alert(`Saved ${date} • Game ${gnum}: ${total}`);
+  // advance to next game and reset inputs
+  if (gnum === '1' || gnum === '2') {
+    document.getElementById('gameNum').value = String(Number(gnum) + 1);
+    clearFrames();
+  }
+  refreshPillsFor(date);
+};
 
 /* ---------- storage & series ---------- */
 const LSKEY='bowling.tracker.v1';
