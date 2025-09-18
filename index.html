@@ -120,6 +120,32 @@ input:-webkit-autofill{
 .scorecard span {
   color: #fff !important;
 }
+/* === Make these three items WHITE === */
+/* 1) Frame number (the big "1", "2", etc.) */
+.frameCard .frameNum{
+  color:#ffffff !important;
+}
+
+/* 2) The small shot boxes (top-right) */
+.frameCard .shots .shot,
+.frameCard .shots .shot:focus,
+.frameCard .shots .shot:active{
+  color:#ffffff !important;                 /* text color */
+  -webkit-text-fill-color:#ffffff !important;/* Safari/iOS */
+}
+
+/* (optional) keep disabled 3rd box readable in non-10th frames */
+.frameCard .shots .shot[disabled]{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  opacity:0.5;                               /* still looks disabled */
+}
+
+/* 3) The big cumulative total box at the bottom */
+.frameCard .frameTotal{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
 
 </style>
 </head>
