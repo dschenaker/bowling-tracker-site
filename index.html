@@ -84,6 +84,21 @@
     -webkit-box-shadow:0 0 0px 1000px #0f1624 inset !important;
             box-shadow:0 0 0px 1000px #0f1624 inset !important;
   }
+  /* Force all input text to white */
+input,
+input[type="text"],
+input.shot {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important; /* Safari/iOS */
+  caret-color: #fff !important;
+}
+
+/* Also placeholders */
+input::placeholder,
+input.shot::placeholder {
+  color: #ccc !important;
+  opacity: 1 !important;
+}
 </style>
 </head>
 <body>
