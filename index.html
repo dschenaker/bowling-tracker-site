@@ -55,98 +55,35 @@
   .shots{display:grid;grid-template-columns:repeat(2,22px);gap:4px}
   .shots.triple{grid-template-columns:repeat(3,22px)}
   .shot{
-    width:22px;height:22px;text-align:center;font-weight:800;font-size:16px;line-height:22px;
-    background:#0e1622;border:1px solid #3b4660;border-radius:4px;color:#ffffff;
-    text-transform:uppercase;caret-color:#ffffff
+    width:22px;height:22px;text-align:center;
+    background:#0f1624;border:1px solid #3e4a66;border-radius:4px;
+    font-weight:900;font-size:18px;line-height:22px;
+    text-transform:uppercase;font-variant-numeric:tabular-nums;appearance:none;
+    color:#ffffff; -webkit-text-fill-color:#ffffff; caret-color:#ffffff;
+    /* key trick for stubborn dark-mode overrides */
+    text-shadow:0 0 0 #ffffff;
   }
   .shot::placeholder{ color:#8ea8c8; opacity:1; }
   .shot:focus{ outline:2px solid #2c84ff; }
 
   .frameTotal{
     position:absolute;left:8px;right:8px;bottom:8px;height:34px;
-    border:1px solid #3b4660;border-radius:6px;background:#111a2a;
-    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#ffffff
+    border:1px solid #3e4a66;border-radius:6px;background:#111a2a;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:18px;color:#ffffff; -webkit-text-fill-color:#ffffff;
+    text-shadow:0 0 0 #ffffff;
   }
 
-  /* iOS autofill quirk */
+  /* keep disabled 3rd box readable in non-10th frames */
+  .shot[disabled]{opacity:.55;color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 0 0 #ffffff;}
+
+  /* iOS/Chrome autofill & forced dark theming fixes */
+  input,select,textarea{color-scheme:light}
   input:-webkit-autofill{
     -webkit-text-fill-color:#ffffff !important;
-    -webkit-box-shadow:0 0 0px 1000px #0e1622 inset;
-    box-shadow:0 0 0px 1000px #0e1622 inset;
+    -webkit-box-shadow:0 0 0px 1000px #0f1624 inset !important;
+            box-shadow:0 0 0px 1000px #0f1624 inset !important;
   }
-  /* ---- FINAL LEGIBILITY OVERRIDES ---- */
-.frameCard .shots .shot{
-  color:#ffffff !important;              /* force bright text */
-  -webkit-text-fill-color:#ffffff !important; /* iOS/Safari */
-  background:#0f1624 !important;         /* slightly lighter box */
-  border:1px solid #3e4a66 !important;   /* clearer edge */
-  font-size:18px !important;             /* bigger digits */
-  font-weight:900 !important;
-  line-height:22px !important;
-  text-transform:uppercase;
-  caret-color:#ffffff;
-  font-variant-numeric: tabular-nums;    /* uniform widths */
-  appearance:none;                       /* ignore UA quirks */
-}
-.frameCard .shots.triple .shot{          /* 10th frame third box too */
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  background:#0f1624 !important;
-}
-
-/* cumulative total box per frame */
-.frameTotal{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  font-size:18px !important;
-  font-weight:900 !important;
-  background:#111a2a !important;
-  border:1px solid #3e4a66 !important;
-}
-
-/* stop OS/browser auto dark-theming from inverting colors */
-input, select, textarea { color-scheme: light; }
-
-/* Safari/iOS autofill */
-input:-webkit-autofill{
-  -webkit-text-fill-color:#ffffff !important;
-  -webkit-box-shadow:0 0 0px 1000px #0f1624 inset !important;
-  box-shadow:0 0 0px 1000px #0f1624 inset !important;
-}
-/* Force text in score cells to display white */
-.scorecard td,
-.scorecard th,
-.scorecard input,
-.scorecard span {
-  color: #fff !important;
-}
-/* === Make these three items WHITE === */
-/* 1) Frame number (the big "1", "2", etc.) */
-.frameCard .frameNum{
-  color:#ffffff !important;
-}
-
-/* 2) The small shot boxes (top-right) */
-.frameCard .shots .shot,
-.frameCard .shots .shot:focus,
-.frameCard .shots .shot:active{
-  color:#ffffff !important;                 /* text color */
-  -webkit-text-fill-color:#ffffff !important;/* Safari/iOS */
-}
-
-/* (optional) keep disabled 3rd box readable in non-10th frames */
-.frameCard .shots .shot[disabled]{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  opacity:0.5;                               /* still looks disabled */
-}
-
-/* 3) The big cumulative total box at the bottom */
-.frameCard .frameTotal{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-}
-
 </style>
 </head>
 <body>
