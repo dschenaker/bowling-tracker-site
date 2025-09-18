@@ -1,104 +1,76 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Bowling League Tracker • Big Ben (44 ft)</title>
 
 <style>
   :root{
     --bg:#0e1116; --card:#171a21; --fg:#e7ecf3; --muted:#9fb2cc; --accent:#2c84ff;
-    --ink:#cfe0fb; --line:#2a3140; --panel:#111623;
+    --ink:#cfe0fb; --line:#2a3140;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--fg);
        font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-
   .wrap{max-width:960px;margin:0 auto;padding:20px}
-  .card{background:var(--card);border-radius:16px;padding:16px;
-        box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
   h1{margin:0 0 8px;font-size:24px}
   h2{margin:12px 0 8px;font-size:18px;color:var(--muted)}
   img{width:100%;height:auto;border-radius:12px}
 
   .tabs{display:flex;gap:8px;margin:12px 0}
-  .tab{flex:1;text-align:center;padding:10px 12px;border-radius:10px;
-       background:#0b0e13;color:#a9bfdc;cursor:pointer}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:#0b0e13;color:#a9bfdc;cursor:pointer}
   .tab.active{background:var(--accent);color:#fff;font-weight:700}
 
   label{font-size:14px;color:var(--ink);display:block;margin-bottom:4px}
-  input,select,textarea{
-    width:100%;background:#0b0e13;border:1px solid var(--line);
-    border-radius:10px;color:var(--fg);padding:10px
-  }
-  .btn{display:inline-block;background:var(--accent);color:#fff;border:none;
-       border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-  .btn.ghost{background:#0b0e13;border:1px solid var(--line);color:var(--ink, #cfe0fb)}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;
-        border:1px solid var(--line);color:var(--ink);font-size:12px}
+  input,select,textarea{width:100%;background:#0b0e13;border:1px solid var(--line);border-radius:10px;color:var(--fg);padding:10px}
+  .btn{display:inline-block;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .btn.ghost{background:#0b0e13;border:1px solid var(--line);color:var(--ink)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;border:1px solid var(--line);color:var(--ink);font-size:12px}
   .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .hint{font-size:13px;color:#9fb2cc}
   .foot{margin-top:10px;color:#9fb2cc;font-size:13px}
 
-  /* ------- Scoresheet layout ------- */
+  /* ----- Scoresheet layout ----- */
   #framesRow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
   @media (min-width:900px){#framesRow{grid-template-columns:repeat(10,1fr)}}
-
-  .frameCard{
-    background:#0b0e13;border:1px solid var(--line);border-radius:10px;
-    padding:8px;position:relative;min-height:110px
-  }
+  .frameCard{background:#0b0e13;border:1px solid var(--line);border-radius:10px;padding:8px;position:relative;min-height:110px}
   .frameHead{display:flex;justify-content:space-between;align-items:flex-start}
-  .frameNum{font-weight:700;color:#cfe0fb}
-
+  .frameNum{font-weight:800;color:#cfe0fb}
   .shots{display:grid;grid-template-columns:repeat(2,22px);gap:4px}
   .shots.triple{grid-template-columns:repeat(3,22px)}
   .shot{
-    width:22px;height:22px;text-align:center;
-    background:#0f1624;border:1px solid #3e4a66;border-radius:4px;
-    font-weight:900;font-size:18px;line-height:22px;
+    width:22px;height:22px;text-align:center;border-radius:4px;
+    background:#0f1624;border:1px solid #3e4a66;
+    font:900 18px/22px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     text-transform:uppercase;font-variant-numeric:tabular-nums;appearance:none;
-    color:#ffffff; -webkit-text-fill-color:#ffffff; caret-color:#ffffff;
-    /* key trick for stubborn dark-mode overrides */
-    text-shadow:0 0 0 #ffffff;
+    /* PRIMARY: make text white (both engines) */
+    color:#fff !important; -webkit-text-fill-color:#fff !important; caret-color:#fff;
+    text-shadow:0 0 0 #fff; /* extra insurance */
   }
-  .shot::placeholder{ color:#8ea8c8; opacity:1; }
-  .shot:focus{ outline:2px solid #2c84ff; }
+  .shot::placeholder{color:#c7d0de;opacity:1}
+  .shot:focus{outline:2px solid #2c84ff}
+  .shot[disabled]{opacity:.55}
 
   .frameTotal{
     position:absolute;left:8px;right:8px;bottom:8px;height:34px;
     border:1px solid #3e4a66;border-radius:6px;background:#111a2a;
     display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:18px;color:#ffffff; -webkit-text-fill-color:#ffffff;
-    text-shadow:0 0 0 #ffffff;
+    font-weight:900;font-size:18px;color:#fff; -webkit-text-fill-color:#fff; text-shadow:0 0 0 #fff;
   }
 
-  /* keep disabled 3rd box readable in non-10th frames */
-  .shot[disabled]{opacity:.55;color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 0 0 #ffffff;}
-
-  /* iOS/Chrome autofill & forced dark theming fixes */
+  /* avoid OS forced dark styles inside inputs */
   input,select,textarea{color-scheme:light}
   input:-webkit-autofill{
-    -webkit-text-fill-color:#ffffff !important;
-    -webkit-box-shadow:0 0 0px 1000px #0f1624 inset !important;
-            box-shadow:0 0 0px 1000px #0f1624 inset !important;
+    -webkit-text-fill-color:#fff !important;
+    -webkit-box-shadow:0 0 0 1000px #0f1624 inset !important;
+    box-shadow:0 0 0 1000px #0f1624 inset !important;
   }
-  /* Force all input text to white */
-input,
-input[type="text"],
-input.shot {
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important; /* Safari/iOS */
-  caret-color: #fff !important;
-}
 
-/* Also placeholders */
-input::placeholder,
-input.shot::placeholder {
-  color: #ccc !important;
-  opacity: 1 !important;
-}
+  table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+  thead th{background:#0b0e13;color:#cfe0fb}
 </style>
 </head>
 <body>
@@ -112,7 +84,7 @@ input.shot::placeholder {
       <div class="tab" data-panel="history">History</div>
     </div>
 
-    <!-- PLAN PANEL -->
+    <!-- PLAN -->
     <section id="plan" class="panel">
       <div class="flex" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
         <div style="flex:1 1 520px;min-width:280px">
@@ -135,34 +107,21 @@ input.shot::placeholder {
       </div>
     </section>
 
-    <!-- ENTRY PANEL -->
+    <!-- ENTRY -->
     <section id="entry" class="panel" style="display:none">
       <h2>Score Entry (X, /, -, 0–9) — Auto-scoring</h2>
       <div class="grid">
         <div class="flex">
-          <div>
-            <label for="date">Date</label>
-            <input id="date" type="date">
-          </div>
+          <div><label for="date">Date</label><input id="date" type="date"></div>
           <div>
             <label for="gameNum">Game</label>
-            <select id="gameNum">
-              <option value="1">Game 1</option>
-              <option value="2">Game 2</option>
-              <option value="3">Game 3</option>
-            </select>
+            <select id="gameNum"><option value="1">Game 1</option><option value="2">Game 2</option><option value="3">Game 3</option></select>
           </div>
-          <div>
-            <label>Total</label>
-            <div class="pill" id="gameTotal">0</div>
-          </div>
-
-          <!-- New Night / Clear Night -->
+          <div><label>Total</label><div class="pill" id="gameTotal">0</div></div>
           <button class="btn ghost" id="newNight" type="button">New Night</button>
           <button class="btn ghost" id="clearNight" type="button">Clear Night</button>
         </div>
 
-        <!-- frames -->
         <div id="framesRow"></div>
 
         <div>
@@ -177,86 +136,87 @@ input.shot::placeholder {
         </div>
 
         <div class="flex">
-          <div><span class="pill" id="g1Pill">G1: —</span></div>
-          <div><span class="pill" id="g2Pill">G2: —</span></div>
-          <div><span class="pill" id="g3Pill">G3: —</span></div>
-          <div><span class="pill" id="seriesPill">Series: —</span></div>
+          <span class="pill" id="g1Pill">G1: —</span>
+          <span class="pill" id="g2Pill">G2: —</span>
+          <span class="pill" id="g3Pill">G3: —</span>
+          <span class="pill" id="seriesPill">Series: —</span>
         </div>
       </div>
     </section>
 
-    <!-- HISTORY PANEL -->
+    <!-- HISTORY -->
     <section id="history" class="panel" style="display:none">
       <h2>History (saved on this device)</h2>
-
       <div class="flex" style="margin-bottom:8px">
-        <div>
-          <label for="seasonStart">Season start date (Week 1)</label>
-          <input id="seasonStart" type="date">
-        </div>
+        <div><label for="seasonStart">Season start date (Week 1)</label><input id="seasonStart" type="date"></div>
         <button class="btn" id="saveSeasonStart" type="button">Save Season Start</button>
         <span class="hint">Week # = weeks since this date (rounded up)</span>
       </div>
 
       <table id="histTable">
-        <thead>
-          <tr><th>Week</th><th>Date</th><th>G1</th><th>G2</th><th>G3</th><th>High</th><th>Low</th><th>Series</th><th>Copy</th></tr>
-        </thead>
+        <thead><tr><th>Week</th><th>Date</th><th>G1</th><th>G2</th><th>G3</th><th>High</th><th>Low</th><th>Series</th><th>Copy</th></tr></thead>
         <tbody></tbody>
       </table>
 
       <div class="flex" style="margin-top:8px">
         <button class="btn ghost" id="exportCSV">Export CSV</button>
-        <input type="file" id="importCSV" accept=".csv" style="display:none" />
+        <input type="file" id="importCSV" accept=".csv" style="display:none"/>
         <button class="btn ghost" id="importBtn">Import CSV</button>
         <button class="btn" id="clearAll">Clear All (device)</button>
       </div>
-
-      <p class="foot">“Copy” puts a tab-separated row on your clipboard (Week, Date, G1, G2, G3, High, Low, Series) to paste into your Google Sheet’s **Main** tab.</p>
+      <p class="foot">“Copy” puts a tab-separated row on your clipboard (Week, Date, G1, G2, G3, High, Low, Series) to paste into your **Main** Google Sheet tab.</p>
     </section>
   </div>
 </div>
 
 <script>
-/* ---------- tabs ---------- */
+/* ---------- Tabs ---------- */
 const tabs=[...document.querySelectorAll('.tab')];
 tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
   document.getElementById(t.dataset.panel).style.display='block';
 });
 
-/* ---------- frames UI (scoresheet style) ---------- */
+/* ---------- Build frames ---------- */
 const framesRow=document.getElementById('framesRow');
 function buildFrames(){
-  framesRow.innerHTML = '';
-  for (let f = 1; f <= 10; f++) {
-    const box = document.createElement('div');
-    box.className = 'frameCard';
-    box.innerHTML = `
+  framesRow.innerHTML='';
+  for (let f=1; f<=10; f++){
+    const el=document.createElement('div');
+    el.className='frameCard';
+    el.innerHTML=`
       <div class="frameHead">
         <span class="frameNum">${f}</span>
         <div class="shots ${f===10?'triple':''}">
-          <input class="shot" data-f="${f}" data-r="1" maxlength="1" placeholder="">
-          <input class="shot" data-f="${f}" data-r="2" maxlength="1" placeholder="">
-          <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${f<10?'disabled':''} placeholder="">
+          <input class="shot" data-f="${f}" data-r="1" maxlength="1">
+          <input class="shot" data-f="${f}" data-r="2" maxlength="1">
+          <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${f<10?'disabled':''}>
         </div>
       </div>
-      <div class="frameTotal" data-ft="${f}"> </div>
-    `;
-    framesRow.appendChild(box);
+      <div class="frameTotal" data-ft="${f}"></div>`;
+    framesRow.appendChild(el);
   }
 }
 buildFrames();
 
-/* ---------- scoring ---------- */
+/* ---- DUMMY-PROOF text color enforcer (inline styles beat everything) ---- */
+function enforceWhiteText(){
+  document.querySelectorAll('.shot').forEach(inp=>{
+    inp.style.color='#fff';
+    inp.style.webkitTextFillColor='#fff';
+    inp.style.caretColor='#fff';
+  });
+}
+enforceWhiteText();
+framesRow.addEventListener('input', enforceWhiteText);
+
+/* ---------- Scoring ---------- */
 function symToPins(sym, prev=0){
-  if(!sym) return 0;
-  sym=sym.toUpperCase();
+  if(!sym) return 0; sym=sym.toUpperCase();
   if(sym==='X') return 10;
   if(sym==='/') return Math.max(0,10-prev);
   if(sym==='-') return 0;
-  const n=parseInt(sym,10);
-  return isNaN(n)?0:n;
+  const n=parseInt(sym,10); return isNaN(n)?0:n;
 }
 function readGame(){
   const rolls=[];
@@ -266,267 +226,166 @@ function readGame(){
     const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.trim().toUpperCase();
     if(f<10){
       if(r1==='X'){ rolls.push(10); }
-      else{
-        const p1=symToPins(r1);
-        const p2=symToPins(r2,p1);
-        rolls.push(p1,p2);
-      }
+      else{ const p1=symToPins(r1), p2=symToPins(r2,p1); rolls.push(p1,p2); }
     }else{
       const p1=symToPins(r1);
       const p2=(r1==='X')?symToPins(r2):symToPins(r2,p1);
       const p3=(r2==='X'||r2==='/'||r1==='X')?symToPins(r3,(r2==='/')?0:p2):0;
-
-      if(r1==='X'){ rolls.push(10); (r2==='X') ? rolls.push(10,p3) : rolls.push(p2,p3); }
-      else { rolls.push(p1); (r2==='/') ? rolls.push(10-p1,p3) : rolls.push(p2); }
+      if(r1==='X'){ rolls.push(10); (r2==='X')?rolls.push(10,p3):rolls.push(p2,p3); }
+      else { rolls.push(p1); (r2==='/')?rolls.push(10-p1,p3):rolls.push(p2); }
     }
   }
   return rolls;
 }
 function renderFrameTotals(){
-  const rolls = readGame();
-  let i = 0, total = 0;
-  for (let f = 1; f <= 10; f++) {
-    let add = 0;
-    if (f < 10) {
-      if (rolls[i] === 10) { add = 10 + (rolls[i+1]??0) + (rolls[i+2]??0); i += 1; }
-      else {
-        const frame = (rolls[i]??0) + (rolls[i+1]??0);
-        add = (frame===10) ? 10 + (rolls[i+2]??0) : frame; i += 2;
-      }
-    } else {
-      const a=rolls[i]??0, b=rolls[i+1]??0, c=rolls[i+2]??0;
-      add = (a===10 || a+b===10) ? a+b+c : a+b;
+  const rolls=readGame(); let i=0,total=0;
+  for(let f=1; f<=10; f++){
+    let add=0;
+    if(f<10){
+      if(rolls[i]===10){ add=10+(rolls[i+1]??0)+(rolls[i+2]??0); i+=1; }
+      else{ const fr=(rolls[i]??0)+(rolls[i+1]??0); add=(fr===10)?10+(rolls[i+2]??0):fr; i+=2; }
+    }else{
+      const a=rolls[i]??0,b=rolls[i+1]??0,c=rolls[i+2]??0;
+      add=(a===10||a+b===10)?a+b+c:a+b;
     }
-    total += add;
-    const cell = document.querySelector(`.frameTotal[data-ft="${f}"]`);
-    if (cell) cell.textContent = total ? String(total) : ' ';
+    total+=add;
+    const cell=document.querySelector(`.frameTotal[data-ft="${f}"]`);
+    if(cell) cell.textContent=total?String(total):'';
   }
 }
 function scoreGame(){
-  const rolls = readGame();
-  let i = 0, total = 0;
-
-  for (let f = 1; f <= 10; f++) {
-    if (f < 10) {
-      if (rolls[i] === 10) { total += 10 + (rolls[i+1] ?? 0) + (rolls[i+2] ?? 0); i += 1; }
-      else {
-        const frame = (rolls[i] ?? 0) + (rolls[i+1] ?? 0);
-        if (frame === 10) total += 10 + (rolls[i+2] ?? 0);
-        else total += frame;
-        i += 2;
-      }
+  const rolls=readGame(); let i=0,total=0;
+  for(let f=1; f<=10; f++){
+    if(f<10){
+      if(rolls[i]===10){ total+=10+(rolls[i+1]??0)+(rolls[i+2]??0); i+=1; }
+      else{ const fr=(rolls[i]??0)+(rolls[i+1]??0); total+=(fr===10)?10+(rolls[i+2]??0):fr; i+=2; }
       continue;
     }
-    const a = rolls[i] ?? 0, b = rolls[i+1] ?? 0, c = rolls[i+2] ?? 0;
-    if (a === 10 || a + b === 10) total += a + b + c; else total += a + b;
+    const a=rolls[i]??0,b=rolls[i+1]??0,c=rolls[i+2]??0;
+    total+=(a===10||a+b===10)?a+b+c:a+b;
   }
-
-  document.getElementById('gameTotal').textContent = total;
+  document.getElementById('gameTotal').textContent=total;
   renderFrameTotals();
   return total;
 }
 framesRow.addEventListener('input', scoreGame);
 renderFrameTotals();
 
-/* ---------- state (v2) with season start ---------- */
-const LSKEY = 'bowling.tracker.v2';
-function loadState() {
-  const raw = localStorage.getItem(LSKEY);
-  if (!raw) {
-    const v1 = localStorage.getItem('bowling.tracker.v1');
-    if (v1) {
-      const nights = JSON.parse(v1);
-      const seasonStart = (nights.length ? nights[0].date : new Date().toISOString().slice(0,10));
-      const state = { seasonStart, nights };
-      localStorage.setItem(LSKEY, JSON.stringify(state));
-      return state;
-    }
-    return { seasonStart: new Date().toISOString().slice(0,10), nights: [] };
-  }
-  return JSON.parse(raw);
-}
-function saveState(state) { localStorage.setItem(LSKEY, JSON.stringify(state)); renderHistory(); }
-function getNights() { return loadState().nights; }
-function loadAll(){ return getNights(); }
-function saveAll(nights){ const s=loadState(); s.nights=nights; saveState(s); }
+/* ---------- Storage & History ---------- */
+const LSKEY='bowling.tracker.v2';
+function loadState(){const raw=localStorage.getItem(LSKEY);
+  if(!raw){return {seasonStart:new Date().toISOString().slice(0,10), nights:[]};}
+  return JSON.parse(raw);}
+function saveState(s){localStorage.setItem(LSKEY,JSON.stringify(s));renderHistory();}
+function getNights(){return loadState().nights;}
+function weekNumberFor(d, start){const d0=new Date(start+'T00:00:00'), d1=new Date(d+'T00:00:00');
+  return Math.max(1,Math.floor((d1-d0)/(7*24*60*60*1000))+1);}
 
-/* ---------- helpers ---------- */
-function weekNumberFor(dateStr, seasonStartStr) {
-  const d0 = new Date(seasonStartStr + 'T00:00:00');
-  const d1 = new Date(dateStr + 'T00:00:00');
-  const msPerDay = 24*60*60*1000;
-  const days = Math.floor((d1 - d0)/msPerDay);
-  return Math.max(1, Math.floor(days/7) + 1);
-}
-function upsertNight(date, gnum, total, notes){
-  const state = loadState();
-  let row = state.nights.find(r => r.date === date);
-  if (!row) { row = { date, g1:null, g2:null, g3:null, notes:{} }; state.nights.push(row); }
-  row['g'+gnum] = total;
-  row.notes['g'+gnum] = notes || '';
-  const nums = [row.g1||0, row.g2||0, row.g3||0];
-  row.series = nums.reduce((a,b)=>a+b,0);
-  row.high = Math.max(...nums);
-  row.low  = Math.min(...nums.filter(n=>n>0).concat([0]));
-  saveState(state);
-  updatePills(date);
+function upsertNight(date,gnum,total,notes){
+  const s=loadState(); let row=s.nights.find(r=>r.date===date);
+  if(!row){row={date,g1:null,g2:null,g3:null,notes:{}};s.nights.push(row);}
+  row['g'+gnum]=total; row.notes['g'+gnum]=notes||'';
+  const nums=[row.g1||0,row.g2||0,row.g3||0];
+  row.series=nums.reduce((a,b)=>a+b,0);
+  row.high=Math.max(...nums); row.low=Math.min(...nums.filter(n=>n>0).concat([0]));
+  saveState(s); updatePills(date);
 }
 function updatePills(date){
-  const state = loadState();
-  const row = state.nights.find(r=>r.date===date);
-  document.getElementById('g1Pill').textContent = 'G1: ' + (row?.g1 ?? '—');
-  document.getElementById('g2Pill').textContent = 'G2: ' + (row?.g2 ?? '—');
-  document.getElementById('g3Pill').textContent = 'G3: ' + (row?.g3 ?? '—');
-  document.getElementById('seriesPill').textContent = 'Series: ' + (row?.series ?? '—');
+  const row=getNights().find(r=>r.date===date);
+  document.getElementById('g1Pill').textContent='G1: '+(row?.g1??'—');
+  document.getElementById('g2Pill').textContent='G2: '+(row?.g2??'—');
+  document.getElementById('g3Pill').textContent='G3: '+(row?.g3??'—');
+  document.getElementById('seriesPill').textContent='Series: '+(row?.series??'—');
 }
-
-/* ---------- entry actions ---------- */
-function clearFrames() {
-  document.querySelectorAll('#framesRow input').forEach(i => { i.value = ''; });
-  document.getElementById('notes').value = '';
-  document.getElementById('gameTotal').textContent = '0';
-  renderFrameTotals();
-}
-function refreshPillsFor(dateStr){
-  updatePills(dateStr);
-  const row = loadAll().find(r => r.date === dateStr);
-  if (!row) {
-    document.getElementById('g1Pill').textContent = 'G1: —';
-    document.getElementById('g2Pill').textContent = 'G2: —';
-    document.getElementById('g3Pill').textContent = 'G3: —';
-    document.getElementById('seriesPill').textContent = 'Series: —';
-  }
-}
-
-document.getElementById('gameNum').addEventListener('change', clearFrames);
-document.getElementById('date').addEventListener('change', (e)=>{ clearFrames(); refreshPillsFor(e.target.value); });
-
-document.getElementById('newNight').onclick = ()=>{
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById('date').value = today;
-  document.getElementById('gameNum').value = '1';
-  clearFrames(); refreshPillsFor(today);
-};
-document.getElementById('clearNight').onclick = ()=>{
-  const d = document.getElementById('date').value || new Date().toISOString().slice(0,10);
-  if (!confirm(`Delete saved scores for ${d}? (Device only)`)) return;
-  const all = loadAll().filter(r => r.date !== d);
-  saveAll(all); clearFrames(); refreshPillsFor(d); alert('Night cleared.');
-};
-
-document.getElementById('saveGame').onclick = () => {
-  const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
-  const gnum = document.getElementById('gameNum').value;
-  const total = scoreGame();
-  const notes = document.getElementById('notes').value.trim();
-  upsertNight(date, gnum, total, notes);
-  alert(`Saved ${date} • Game ${gnum}: ${total}`);
-  if (gnum === '1' || gnum === '2') {
-    document.getElementById('gameNum').value = String(Number(gnum) + 1);
-    clearFrames();
-  }
-  refreshPillsFor(date);
-};
-document.getElementById('resetGame').onclick = clearFrames;
-
-/* quick notes */
-document.getElementById('saveQuickNotes').onclick = ()=>{
-  localStorage.setItem('bowling.quicknotes', document.getElementById('qNotes').value);
-  const el=document.getElementById('quickSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
-};
-document.getElementById('qNotes').value = localStorage.getItem('bowling.quicknotes')||'';
-
-/* ---------- history ---------- */
 function renderHistory(){
-  const tb = document.querySelector('#histTable tbody');
-  const state = loadState();
-
-  if (!state.seasonStart && state.nights.length) {
-    state.seasonStart = state.nights.map(n=>n.date).sort()[0];
-    saveState(state);
-  }
-  document.getElementById('seasonStart').value = state.seasonStart;
-
-  const rows = [...state.nights].sort((a,b)=> (a.date < b.date ? -1 : 1));
-  tb.innerHTML = rows.map(r=>{
-    const wk = weekNumberFor(r.date, state.seasonStart);
-    return `
-      <tr>
-        <td>${wk}</td>
-        <td>${r.date}</td>
-        <td>${r.g1??''}</td>
-        <td>${r.g2??''}</td>
-        <td>${r.g3??''}</td>
-        <td>${r.high??''}</td>
-        <td>${r.low??''}</td>
-        <td><strong>${r.series??''}</strong></td>
-        <td><button class="btn ghost" data-copy="${wk}\t${r.date}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}">Copy</button></td>
-      </tr>`;
-  }).join('');
+  const tb=document.querySelector('#histTable tbody'); const s=loadState();
+  document.getElementById('seasonStart').value=s.seasonStart;
+  const rows=[...s.nights].sort((a,b)=>a.date<b.date?-1:1);
+  tb.innerHTML=rows.map(r=>{
+    const wk=weekNumberFor(r.date,s.seasonStart);
+    return `<tr>
+      <td>${wk}</td><td>${r.date}</td>
+      <td>${r.g1??''}</td><td>${r.g2??''}</td><td>${r.g3??''}</td>
+      <td>${r.high??''}</td><td>${r.low??''}</td><td><strong>${r.series??''}</strong></td>
+      <td><button class="btn ghost" data-copy="${wk}\t${r.date}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}">Copy</button></td>
+    </tr>`}).join('');
 }
 renderHistory();
 
-document.querySelector('#histTable').onclick = e=>{
-  const btn = e.target.closest('button[data-copy]');
-  if(!btn) return;
-  navigator.clipboard.writeText(btn.dataset.copy).then(()=> btn.textContent='Copied ✓');
-};
-document.getElementById('saveSeasonStart').onclick = ()=>{
-  const state = loadState();
-  const val = document.getElementById('seasonStart').value;
-  if (val) { state.seasonStart = val; saveState(state); }
-};
-document.getElementById('exportCSV').onclick = ()=>{
-  const state = loadState();
-  const header = 'Week,Date,G1,G2,G3,High,Low,Series\n';
-  const body = state.nights
-    .sort((a,b)=>a.date<b.date?-1:1)
-    .map(r=>{
-      const wk = weekNumberFor(r.date, state.seasonStart);
-      return [wk,r.date,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0].join(',');
-    }).join('\n');
-  const blob = new Blob([header+body], {type:'text/csv'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'bowling-history.csv'; a.click();
-};
-document.getElementById('importBtn').onclick = ()=> document.getElementById('importCSV').click();
-document.getElementById('importCSV').onchange = async (e)=>{
-  const file = e.target.files[0]; if(!file) return;
-  const text = await file.text();
-  const lines = text.trim().split(/\r?\n/);
-  const header = lines.shift();
-  const cols = header.split(',').map(h=>h.trim().toLowerCase());
-  const idx = (name)=> cols.indexOf(name);
-  const iDate   = idx('date');
-  const iG1     = idx('g1');
-  const iG2     = idx('g2');
-  const iG3     = idx('g3');
-  const iHigh   = idx('high');
-  const iLow    = idx('low');
-  const iSeries = idx('series');
+/* ---------- Entry actions ---------- */
+function clearFrames(){
+  document.querySelectorAll('#framesRow input').forEach(i=>i.value='');
+  document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
+  enforceWhiteText(); renderFrameTotals();
+}
+function refreshPillsFor(d){updatePills(d); const row=getNights().find(r=>r.date===d);
+  if(!row){['g1','g2','g3'].forEach((g,i)=>document.getElementById(['g1Pill','g2Pill','g3Pill'][i]).textContent=`G${i+1}: —`);
+           document.getElementById('seriesPill').textContent='Series: —';}}
 
-  const state = loadState();
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const c = line.split(',');
-    const date = c[iDate]?.trim();
-    if (!date) continue;
-    let r = state.nights.find(x=>x.date===date);
-    if (!r) { r = { date, g1:0, g2:0, g3:0, notes:{} }; state.nights.push(r); }
-    if (iG1>-1) r.g1 = +c[iG1] || 0;
-    if (iG2>-1) r.g2 = +c[iG2] || 0;
-    if (iG3>-1) r.g3 = +c[iG3] || 0;
-    r.high   = (iHigh>-1)   ? (+c[iHigh]   || Math.max(r.g1,r.g2,r.g3)) : Math.max(r.g1,r.g2,r.g3);
-    r.low    = (iLow>-1)    ? (+c[iLow]    || Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0))) : Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
-    r.series = (iSeries>-1) ? (+c[iSeries] || (r.g1+r.g2+r.g3)) : (r.g1+r.g2+r.g3);
+document.getElementById('gameNum').addEventListener('change', clearFrames);
+document.getElementById('date').addEventListener('change', e=>{clearFrames(); refreshPillsFor(e.target.value);});
+document.getElementById('newNight').onclick=()=>{const t=new Date().toISOString().slice(0,10);
+  document.getElementById('date').value=t; document.getElementById('gameNum').value='1'; clearFrames(); refreshPillsFor(t);};
+document.getElementById('clearNight').onclick=()=>{
+  const d=document.getElementById('date').value||new Date().toISOString().slice(0,10);
+  if(!confirm(`Delete saved scores for ${d}? (Device only)`)) return;
+  const s=loadState(); s.nights=s.nights.filter(r=>r.date!==d); saveState(s); clearFrames(); refreshPillsFor(d); alert('Night cleared.');
+};
+document.getElementById('saveGame').onclick=()=>{
+  const date=document.getElementById('date').value||new Date().toISOString().slice(0,10);
+  const gnum=document.getElementById('gameNum').value; const total=scoreGame();
+  const notes=document.getElementById('notes').value.trim(); upsertNight(date,gnum,total,notes);
+  alert(`Saved ${date} • Game ${gnum}: ${total}`);
+  if(gnum==='1'||gnum==='2'){document.getElementById('gameNum').value=String(Number(gnum)+1); clearFrames();}
+  refreshPillsFor(date);
+};
+document.getElementById('resetGame').onclick=clearFrames;
+
+/* quick notes */
+document.getElementById('saveQuickNotes').onclick=()=>{
+  localStorage.setItem('bowling.quicknotes',document.getElementById('qNotes').value);
+  const el=document.getElementById('quickSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
+};
+document.getElementById('qNotes').value=localStorage.getItem('bowling.quicknotes')||'';
+
+/* history actions */
+document.querySelector('#histTable').onclick=e=>{
+  const btn=e.target.closest('button[data-copy]'); if(!btn) return;
+  navigator.clipboard.writeText(btn.dataset.copy).then(()=>btn.textContent='Copied ✓');
+};
+document.getElementById('saveSeasonStart').onclick=()=>{
+  const s=loadState(); const v=document.getElementById('seasonStart').value; if(v){s.seasonStart=v; saveState(s);}
+};
+document.getElementById('exportCSV').onclick=()=>{
+  const s=loadState(); const header='Week,Date,G1,G2,G3,High,Low,Series\n';
+  const body=[...s.nights].sort((a,b)=>a.date<b.date?-1:1).map(r=>{
+    const wk=weekNumberFor(r.date,s.seasonStart);
+    return [wk,r.date,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0].join(',');
+  }).join('\n');
+  const blob=new Blob([header+body],{type:'text/csv'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='bowling-history.csv'; a.click();
+};
+document.getElementById('importBtn').onclick=()=>document.getElementById('importCSV').click();
+document.getElementById('importCSV').onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file) return; const text=await file.text();
+  const lines=text.trim().split(/\r?\n/); const head=lines.shift().toLowerCase().split(',');
+  const idx=n=>head.indexOf(n);
+  const iDate=idx('date'), iG1=idx('g1'), iG2=idx('g2'), iG3=idx('g3'), iHigh=idx('high'), iLow=idx('low'), iSeries=idx('series');
+  const s=loadState();
+  for(const ln of lines){ if(!ln.trim()) continue; const c=ln.split(',');
+    const date=c[iDate]?.trim(); if(!date) continue;
+    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{}}; s.nights.push(r);}
+    if(iG1>-1) r.g1=+c[iG1]||0; if(iG2>-1) r.g2=+c[iG2]||0; if(iG3>-1) r.g3=+c[iG3]||0;
+    r.high=(iHigh>-1)?(+c[iHigh]||Math.max(r.g1,r.g2,r.g3)):Math.max(r.g1,r.g2,r.g3);
+    r.low=(iLow>-1)?(+c[iLow]||Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0))):Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
+    r.series=(iSeries>-1)?(+c[iSeries]||(r.g1+r.g2+r.g3)):(r.g1+r.g2+r.g3);
   }
-  if (!state.seasonStart && state.nights.length) {
-    state.seasonStart = state.nights.map(n=>n.date).sort()[0];
-  }
-  saveState(state);
+  if(!s.seasonStart && s.nights.length){s.seasonStart=s.nights.map(n=>n.date).sort()[0];}
+  saveState(s);
 };
 
-/* init defaults */
-document.getElementById('date').value = new Date().toISOString().slice(0,10);
+/* init */
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
 </script>
 </body>
 </html>
