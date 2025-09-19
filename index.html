@@ -6,7 +6,7 @@
 <title>Bowling League Tracker • Big Ben (44 ft)</title>
 
 <style>
-  /* ===== Static colors only (no variables, no modes) ===== */
+  /* ===== Static colors only ===== */
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
@@ -39,36 +39,47 @@
   /* ===== Scoresheet ===== */
   #framesRow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
   @media (min-width:900px){#framesRow{grid-template-columns:repeat(10,1fr)}}
+
   .frameCard{background:#0b0e13;border:1px solid #2a3140;border-radius:10px;padding:8px;position:relative;min-height:110px}
   .frameHead{display:flex;justify-content:space-between;align-items:flex-start}
   .frameNum{font-weight:800;color:#cfe0fb}
-  .shots{display:grid;grid-template-columns:repeat(2,22px);gap:4px}
-  .shots.triple{grid-template-columns:repeat(3,22px)}
 
-  /* Shot inputs: plain, readable, dummy-proof */
+  .shots{display:grid;grid-template-columns:repeat(2,28px);gap:6px}
+  .shots.triple{grid-template-columns:repeat(3,28px)}
+
+  /* ← SIMPLE square inputs — big, always-visible characters */
   .shot{
-    width:22px;height:22px;
+    width:28px;height:28px;padding:0;margin:0;
     text-align:center;
-    border-radius:4px;
-    background:#ffffff;            /* light box */
-    border:1px solid #3b3b3b;
-    font:900 18px/22px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    text-transform:uppercase;
-    font-variant-numeric:tabular-nums;
-    color:#000 !important;         /* visible text */
-    caret-color:#000 !important;
+    font:900 18px/28px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    text-transform:uppercase; font-variant-numeric:tabular-nums;
+    background:#0f1624; border:1px solid #3b4660; border-radius:4px;
+    color:#ffffff !important;                 /* text is white */
+    -webkit-text-fill-color:#ffffff !important; /* iOS/Safari */
+    caret-color:#2c84ff;
+    appearance:none;
   }
-  .shot:focus{ outline:2px solid #2c84ff; }
-  .shot[disabled]{ opacity:.45; }
+  .shot:focus{outline:2px solid #2c84ff}
+  .shot[disabled]{opacity:.45}
+
+  /* Stop browser theming from inverting form colors */
+  .shot, input, select, textarea { color-scheme: light; }
+
+  /* Fight iOS/Chrome autofill */
+  input:-webkit-autofill{
+    -webkit-text-fill-color:#ffffff !important;
+    -webkit-box-shadow:0 0 0 1000px #0f1624 inset !important;
+            box-shadow:0 0 0 1000px #0f1624 inset !important;
+    transition: background-color 86400s;
+  }
 
   .frameTotal{
     position:absolute;left:8px;right:8px;bottom:8px;height:34px;
-    border:1px solid #3b4660;border-radius:6px;background:#f7f9ff;
+    border:1px solid #3b4660;border-radius:6px;background:#111a2a;
     display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:18px;color:#000; /* black text on light total box */
+    font-weight:900;font-size:18px;color:#fff;
   }
 
-  /* tables */
   table{width:100%;border-collapse:collapse}
   th,td{border:1px solid #2a3140;padding:6px 8px;text-align:center}
   thead th{background:#0b0e13;color:#cfe0fb}
@@ -182,45 +193,53 @@ tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.c
   document.getElementById(t.dataset.panel).style.display='block';
 });
 
-/* -------- Build frames -------- */
-const framesRow = document.getElementById('framesRow');
-
+/* -------- Build frames (plain inputs) -------- */
+const framesRow=document.getElementById('framesRow');
 function buildFrames(){
-  framesRow.innerHTML = '';
-  for (let f = 1; f <= 10; f++) {
-    const triple = f === 10;
-    const el = document.createElement('div');
-    el.className = 'frameCard';
-    el.innerHTML = `
+  framesRow.innerHTML='';
+  for(let f=1; f<=10; f++){
+    const triple=(f===10);
+    const el=document.createElement('div');
+    el.className='frameCard';
+    el.innerHTML=`
       <div class="frameHead">
         <span class="frameNum">${f}</span>
-        <div class="shots ${triple ? 'triple' : ''}">
-          <input class="shot" data-f="${f}" data-r="1" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
-          <input class="shot" data-f="${f}" data-r="2" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
-          <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${triple ? '' : 'disabled'} inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <div class="shots ${triple?'triple':''}">
+          <input class="shot" data-f="${f}" data-r="1" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <input class="shot" data-f="${f}" data-r="2" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${triple?'':'disabled'} autocomplete="off" autocapitalize="characters" spellcheck="false">
         </div>
       </div>
-      <div class="frameTotal" data-ft="${f}"></div>
-    `;
+      <div class="frameTotal" data-ft="${f}"></div>`;
     framesRow.appendChild(el);
   }
 }
 buildFrames();
 
 /* -------- Scoring -------- */
+function normalize(sym){ if(!sym) return ''; sym=sym.toUpperCase(); return /[X\/\-0-9]/.test(sym)?sym:''; }
+framesRow.addEventListener('input', (e)=>{
+  if(e.target.classList.contains('shot')){
+    e.target.value = normalize(e.target.value.slice(0,1));
+    scoreGame();
+  }
+});
+
 function symToPins(sym, prev=0){
-  if(!sym) return 0; sym=sym.toUpperCase();
+  if(!sym) return 0;
+  sym=sym.toUpperCase();
   if(sym==='X') return 10;
   if(sym==='/') return Math.max(0,10-prev);
   if(sym==='-') return 0;
   const n=parseInt(sym,10); return isNaN(n)?0:n;
 }
+
 function readGame(){
   const rolls=[];
   for(let f=1; f<=10; f++){
-    const r1=document.querySelector(`input[data-f="${f}"][data-r="1"]`).value.trim().toUpperCase();
-    const r2=document.querySelector(`input[data-f="${f}"][data-r="2"]`).value.trim().toUpperCase();
-    const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.trim().toUpperCase();
+    const r1=document.querySelector(`input[data-f="${f}"][data-r="1"]`).value.toUpperCase();
+    const r2=document.querySelector(`input[data-f="${f}"][data-r="2"]`).value.toUpperCase();
+    const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.toUpperCase();
     if(f<10){
       if(r1==='X'){ rolls.push(10); }
       else{ const p1=symToPins(r1), p2=symToPins(r2,p1); rolls.push(p1,p2); }
@@ -234,6 +253,7 @@ function readGame(){
   }
   return rolls;
 }
+
 function renderFrameTotals(){
   const rolls=readGame(); let i=0,total=0;
   for(let f=1; f<=10; f++){
@@ -250,6 +270,7 @@ function renderFrameTotals(){
     if(cell) cell.textContent=total?String(total):'';
   }
 }
+
 function scoreGame(){
   const rolls=readGame(); let i=0,total=0;
   for(let f=1; f<=10; f++){
@@ -265,10 +286,9 @@ function scoreGame(){
   renderFrameTotals();
   return total;
 }
-framesRow.addEventListener('input', scoreGame);
 renderFrameTotals();
 
-/* -------- Storage & History -------- */
+/* -------- Storage & History (unchanged logic) -------- */
 const LSKEY='bowling.tracker.v2';
 function loadState(){const raw=localStorage.getItem(LSKEY);
   if(!raw){return {seasonStart:new Date().toISOString().slice(0,10), nights:[]};}
@@ -311,12 +331,14 @@ renderHistory();
 
 /* -------- Entry actions -------- */
 function clearFrames(){
-  document.querySelectorAll('#framesRow input').forEach(i=>i.value='');
+  document.querySelectorAll('#framesRow .shot').forEach(i=>i.value='');
   document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
   renderFrameTotals();
 }
 function refreshPillsFor(d){updatePills(d); const row=getNights().find(r=>r.date===d);
-  if(!row){['g1','g2','g3'].forEach((g,i)=>document.getElementById(['g1Pill','g2Pill','g3Pill'][i]).textContent=`G${i+1}: —`);
+  if(!row){document.getElementById('g1Pill').textContent='G1: —';
+           document.getElementById('g2Pill').textContent='G2: —';
+           document.getElementById('g3Pill').textContent='G3: —';
            document.getElementById('seriesPill').textContent='Series: —';}}
 
 document.getElementById('gameNum').addEventListener('change', clearFrames);
