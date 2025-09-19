@@ -45,24 +45,41 @@
   .shots{display:grid;grid-template-columns:repeat(2,22px);gap:4px}
   .shots.triple{grid-template-columns:repeat(3,22px)}
 
-  /* === SHOT INPUTS: white background, black text (no tricks) === */
-  .shot{
-    width:22px;height:22px;text-align:center;border-radius:4px;
-    background:#ffffff;                 /* white box */
-    border:1px solid #3b3b3b;           /* clear edge */
-    font:900 18px/22px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    text-transform:uppercase;font-variant-numeric:tabular-nums;appearance:none;
+  /* ---- SHOT BOX with echo text overlay (dummy-proof) ---- */
+.shotBox{
+  position: relative;
+  width: 22px; height: 22px;
+}
+.shot{
+  position: absolute; inset: 0;
+  width: 22px; height: 22px;
+  text-align: center; border-radius: 4px;
+  background: #0f1624; border: 1px solid #3b4660;
+  font: 900 18px/22px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  text-transform: uppercase; font-variant-numeric: tabular-nums;
+  appearance: none;
 
-    color:#000000 !important;           /* force black text */
-    -webkit-text-fill-color:#000000 !important; /* WebKit/Safari */
-    caret-color:#000000 !important;
+  /* hide the browser-painted text; keep caret/focus */
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  caret-color: #2c84ff !important;
+}
+.shot:focus{ outline: 2px solid #2c84ff; }
 
-    /* no text-shadow, no filters */
-    box-shadow:none; filter:none;
-  }
-  .shot::placeholder{color:#666;opacity:1}
-  .shot:focus{outline:2px solid #2c84ff}
-  .shot[disabled]{opacity:.55}
+.shot[disabled]{ opacity: .45; }
+
+/* The visible character */
+.shotBox .echo{
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font: inherit; font-weight: 900;
+  color: #ffffff;   /* what you actually want to see */
+  pointer-events: none; user-select: none;
+}
+
+/* Light theme test variant — switch to black on white if needed */
+/* .shot{ background:#fff; border:1px solid #3b3b3b; }
+   .shotBox .echo{ color:#000; } */
 
   .frameTotal{
     position:absolute;left:8px;right:8px;bottom:8px;height:34px;
@@ -186,24 +203,65 @@ tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.c
 });
 
 /* -------- Build frames -------- */
-const framesRow=document.getElementById('framesRow');
 function buildFrames(){
-  framesRow.innerHTML='';
-  for (let f=1; f<=10; f++){
-    const el=document.createElement('div');
-    el.className='frameCard';
-    el.innerHTML=`
+  framesRow.innerHTML = '';
+  for (let f = 1; f <= 10; f++) {
+    const triple = f === 10;
+    const el = document.createElement('div');
+    el.className = 'frameCard';
+    el.innerHTML = `
       <div class="frameHead">
         <span class="frameNum">${f}</span>
-        <div class="shots ${f===10?'triple':''}">
-          <input class="shot" data-f="${f}" data-r="1" maxlength="1">
-          <input class="shot" data-f="${f}" data-r="2" maxlength="1">
-          <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${f<10?'disabled':''}>
+        <div class="shots ${triple ? 'triple' : ''}">
+          <div class="shotBox">
+            <input class="shot" data-f="${f}" data-r="1" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <span class="echo"></span>
+          </div>
+          <div class="shotBox">
+            <input class="shot" data-f="${f}" data-r="2" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <span class="echo"></span>
+          </div>
+          <div class="shotBox">
+            <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${triple ? '' : 'disabled'} inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <span class="echo"></span>
+          </div>
         </div>
       </div>
-      <div class="frameTotal" data-ft="${f}"></div>`;
+      <div class="frameTotal" data-ft="${f}"></div>
+    `;
     framesRow.appendChild(el);
   }
+  // Acceptable symbols: X, /, -, 0-9 (one char)
+function normalizeShotChar(ch, prev) {
+  if (!ch) return '';
+  ch = ch.toUpperCase();
+  if (ch === 'X' || ch === '/' || ch === '-') return ch;
+  const n = ch.charCodeAt(0);
+  if (n >= 48 && n <= 57) return ch; // 0-9
+  return ''; // anything else -> ignore
+}
+
+function wireEchoMirrors(){
+  document.querySelectorAll('.shot').forEach(inp => {
+    const echo = inp.parentElement.querySelector('.echo');
+
+    const sync = () => {
+      // sanitize single char and display
+      let v = (inp.value || '').slice(0,1).toUpperCase();
+      v = normalizeShotChar(v);
+      inp.value = v;
+      echo.textContent = v;
+    };
+
+    // initialize & bind
+    sync();
+    ['input','change','keyup','blur'].forEach(ev => inp.addEventListener(ev, sync));
+  });
+}
+
+// Build frames + attach mirrors on load
+buildFrames();
+wireEchoMirrors();
 }
 buildFrames();
 
