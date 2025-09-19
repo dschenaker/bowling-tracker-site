@@ -6,70 +6,100 @@
 <title>Bowling League Tracker • Big Ben (44 ft)</title>
 
 <style>
-  :root{
-    --bg:#0e1116; --card:#171a21; --fg:#e7ecf3; --muted:#9fb2cc; --accent:#2c84ff;
-    --ink:#cfe0fb; --line:#2a3140;
-  }
+  /* ====== STATIC COLORS (no variables, no modes) ====== */
+  /* palette */
+  /* page */
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-       font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:#000000;      /* hard black */
+    color:#e7ecf3;           /* light gray text */
+    font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+
   .wrap{max-width:960px;margin:0 auto;padding:20px}
-  .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  .card{
+    background:#171a21;      /* dark card */
+    border-radius:16px;padding:16px;
+    box-shadow:0 6px 20px rgba(0,0,0,.35)
+  }
   h1{margin:0 0 8px;font-size:24px}
-  h2{margin:12px 0 8px;font-size:18px;color:var(--muted)}
+  h2{margin:12px 0 8px;font-size:18px;color:#9fb2cc}
   img{width:100%;height:auto;border-radius:12px}
 
+  /* tabs */
   .tabs{display:flex;gap:8px;margin:12px 0}
-  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:#0b0e13;color:#a9bfdc;cursor:pointer}
-  .tab.active{background:var(--accent);color:#fff;font-weight:700}
+  .tab{
+    flex:1;text-align:center;padding:10px 12px;border-radius:10px;
+    background:#0b0e13;color:#a9bfdc;cursor:pointer;border:1px solid #2a3140
+  }
+  .tab.active{background:#2c84ff;color:#ffffff;border-color:#2c84ff;font-weight:700}
 
-  label{font-size:14px;color:var(--ink);display:block;margin-bottom:4px}
-  input,select,textarea{width:100%;background:#0b0e13;border:1px solid var(--line);border-radius:10px;color:var(--fg);padding:10px}
-  .btn{display:inline-block;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-  .btn.ghost{background:#0b0e13;border:1px solid var(--line);color:var(--ink)}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;border:1px solid var(--line);color:var(--ink);font-size:12px}
+  /* form bits */
+  label{font-size:14px;color:#cfe0fb;display:block;margin-bottom:4px}
+  input,select,textarea{
+    width:100%;
+    background:#0b0e13;
+    border:1px solid #2a3140;
+    border-radius:10px;
+    color:#e7ecf3;
+    padding:10px;
+  }
+  .btn{
+    display:inline-block;background:#2c84ff;color:#ffffff;border:none;
+    border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer
+  }
+  .btn.ghost{background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb}
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:999px;
+    background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;font-size:12px
+  }
   .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .hint{font-size:13px;color:#9fb2cc}
   .foot{margin-top:10px;color:#9fb2cc;font-size:13px}
 
-  /* ----- Scoresheet layout ----- */
+  /* ===== Scoresheet ===== */
   #framesRow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
   @media (min-width:900px){#framesRow{grid-template-columns:repeat(10,1fr)}}
-  .frameCard{background:#0b0e13;border:1px solid var(--line);border-radius:10px;padding:8px;position:relative;min-height:110px}
+
+  .frameCard{
+    background:#0b0e13;border:1px solid #2a3140;border-radius:10px;
+    padding:8px;position:relative;min-height:110px
+  }
   .frameHead{display:flex;justify-content:space-between;align-items:flex-start}
   .frameNum{font-weight:800;color:#cfe0fb}
+
   .shots{display:grid;grid-template-columns:repeat(2,22px);gap:4px}
   .shots.triple{grid-template-columns:repeat(3,22px)}
+
+  /* === SHOT INPUTS: Neon Cyan text, aggressively forced === */
   .shot{
     width:22px;height:22px;text-align:center;border-radius:4px;
-    background:#0f1624;border:1px solid #3e4a66;
+    background:#0f1624;border:1px solid #3ee0ff55;
     font:900 18px/22px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     text-transform:uppercase;font-variant-numeric:tabular-nums;appearance:none;
-    /* PRIMARY: make text white (both engines) */
-    color:#fff !important; -webkit-text-fill-color:#fff !important; caret-color:#fff;
-    text-shadow:0 0 0 #fff; /* extra insurance */
+
+    color:#12d7ff !important;                  /* cyan text */
+    -webkit-text-fill-color:#12d7ff !important;/* iOS/Safari */
+    caret-color:#12d7ff !important;
+    text-shadow:0 0 0 #12d7ff;                 /* extra insurance */
   }
-  .shot::placeholder{color:#c7d0de;opacity:1}
+  .shot::placeholder{color:#8feaff;opacity:1}
   .shot:focus{outline:2px solid #2c84ff}
   .shot[disabled]{opacity:.55}
 
   .frameTotal{
     position:absolute;left:8px;right:8px;bottom:8px;height:34px;
-    border:1px solid #3e4a66;border-radius:6px;background:#111a2a;
+    border:1px solid #3b4660;border-radius:6px;background:#111a2a;
     display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:18px;color:#fff; -webkit-text-fill-color:#fff; text-shadow:0 0 0 #fff;
+    font-weight:900;font-size:18px;
+    color:#ffffff; -webkit-text-fill-color:#ffffff; text-shadow:0 0 0 #ffffff;
   }
 
-  /* avoid OS forced dark styles inside inputs */
-  input,select,textarea{color-scheme:light}
-  input:-webkit-autofill{
-    -webkit-text-fill-color:#fff !important;
-    -webkit-box-shadow:0 0 0 1000px #0f1624 inset !important;
-    box-shadow:0 0 0 1000px #0f1624 inset !important;
-  }
-
+  /* tables */
   table{width:100%;border-collapse:collapse}
-  th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+  th,td{border:1px solid #2a3140;padding:6px 8px;text-align:center}
   thead th{background:#0b0e13;color:#cfe0fb}
 </style>
 </head>
@@ -115,7 +145,11 @@
           <div><label for="date">Date</label><input id="date" type="date"></div>
           <div>
             <label for="gameNum">Game</label>
-            <select id="gameNum"><option value="1">Game 1</option><option value="2">Game 2</option><option value="3">Game 3</option></select>
+            <select id="gameNum">
+              <option value="1">Game 1</option>
+              <option value="2">Game 2</option>
+              <option value="3">Game 3</option>
+            </select>
           </div>
           <div><label>Total</label><div class="pill" id="gameTotal">0</div></div>
           <button class="btn ghost" id="newNight" type="button">New Night</button>
@@ -170,14 +204,14 @@
 </div>
 
 <script>
-/* ---------- Tabs ---------- */
+/* -------- Tabs -------- */
 const tabs=[...document.querySelectorAll('.tab')];
 tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
   document.getElementById(t.dataset.panel).style.display='block';
 });
 
-/* ---------- Build frames ---------- */
+/* -------- Build frames -------- */
 const framesRow=document.getElementById('framesRow');
 function buildFrames(){
   framesRow.innerHTML='';
@@ -199,18 +233,21 @@ function buildFrames(){
 }
 buildFrames();
 
-/* ---- DUMMY-PROOF text color enforcer (inline styles beat everything) ---- */
-function enforceWhiteText(){
+/* ---- Dummy-proof neon enforcer (inline styles beat everything) ---- */
+function enforceNeon(c='#12d7ff'){
   document.querySelectorAll('.shot').forEach(inp=>{
-    inp.style.color='#fff';
-    inp.style.webkitTextFillColor='#fff';
-    inp.style.caretColor='#fff';
+    inp.style.setProperty('color', c, 'important');
+    inp.style.setProperty('-webkit-text-fill-color', c, 'important');
+    inp.style.setProperty('caret-color', c, 'important');
+    inp.style.textShadow = `0 0 0 ${c}`;
   });
 }
-enforceWhiteText();
-framesRow.addEventListener('input', enforceWhiteText);
+enforceNeon();
+document.addEventListener('focusin', e=>{ if(e.target.classList?.contains('shot')) enforceNeon(); });
+document.addEventListener('input',   e=>{ if(e.target.classList?.contains('shot')) enforceNeon(); });
+window.addEventListener('pageshow', enforceNeon);
 
-/* ---------- Scoring ---------- */
+/* -------- Scoring -------- */
 function symToPins(sym, prev=0){
   if(!sym) return 0; sym=sym.toUpperCase();
   if(sym==='X') return 10;
@@ -271,7 +308,7 @@ function scoreGame(){
 framesRow.addEventListener('input', scoreGame);
 renderFrameTotals();
 
-/* ---------- Storage & History ---------- */
+/* -------- Storage & History -------- */
 const LSKEY='bowling.tracker.v2';
 function loadState(){const raw=localStorage.getItem(LSKEY);
   if(!raw){return {seasonStart:new Date().toISOString().slice(0,10), nights:[]};}
@@ -312,11 +349,11 @@ function renderHistory(){
 }
 renderHistory();
 
-/* ---------- Entry actions ---------- */
+/* -------- Entry actions -------- */
 function clearFrames(){
   document.querySelectorAll('#framesRow input').forEach(i=>i.value='');
   document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
-  enforceWhiteText(); renderFrameTotals();
+  enforceNeon(); renderFrameTotals();
 }
 function refreshPillsFor(d){updatePills(d); const row=getNights().find(r=>r.date===d);
   if(!row){['g1','g2','g3'].forEach((g,i)=>document.getElementById(['g1Pill','g2Pill','g3Pill'][i]).textContent=`G${i+1}: —`);
