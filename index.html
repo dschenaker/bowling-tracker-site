@@ -102,11 +102,6 @@
   .miniCal .day:hover{outline:2px solid #2c84ff}
   .miniCal .today{border-color:#2c84ff}
   .miniCal .sel{background:#2c84ff;color:#fff}
-
-  /* modal calendar */
-  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:1000}
-  .modal .panel{background:#171a21;border:1px solid #2a3140;border-radius:14px;padding:12px;max-width:360px;width:92%}
-  .modal .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -156,10 +151,7 @@
       <div class="row">
         <div class="col">
           <label for="date">Date</label>
-          <div class="flex">
-            <input id="date" type="date" style="flex:1">
-            <button id="openCal" class="btn ghost" type="button">Pick from Calendar</button>
-          </div>
+          <input id="date" type="date">
         </div>
         <div class="col">
           <label for="gameNum">Game</label>
@@ -276,10 +268,10 @@
 
       <div class="flex" id="totalsBar"></div>
 
-      <h2 style="margin-top:14px">By Ball (frame-accurate)</h2>
+      <h2 style="margin-top:14px">By Ball</h2>
       <table id="ballBreakdown">
         <thead>
-          <tr><th>Ball</th><th>Role</th><th>Games Used</th><th>Strikes</th><th>Spares</th><th>Opens</th></tr>
+          <tr><th>Ball</th><th>Type</th><th>Games Used</th><th>Strikes</th><th>Spares</th><th>Opens</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -303,7 +295,7 @@
           <span class="hint" id="hcpSaved"></span>
         </div>
       </div>
-      <p class="foot">Handicap per game = max(0, (Base − Average) × Percent%).</p>
+      <p class="foot">Handicap per game = max(0, (Base − Average) × Percent%). We use your running scratch average.</p>
     </section>
 
     <!-- PROFILE -->
@@ -351,17 +343,6 @@
   </div>
 </div>
 
-<!-- Modal calendar -->
-<div id="calModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="calTitle">
-  <div class="panel">
-    <div class="header">
-      <strong id="calTitle">Pick a Date</strong>
-      <button id="closeCal" class="btn ghost" type="button">Close</button>
-    </div>
-    <div id="modalCal"></div>
-  </div>
-</div>
-
 <script>
 /* ---------- tabs ---------- */
 const tabs=[...document.querySelectorAll('.tab')];
@@ -405,7 +386,7 @@ function buildFrames(){
 buildFrames();
 
 /* ---------- state & profile ---------- */
-const LSKEY='bowling.tracker.v5'; // v5: frame snapshots + exact analytics + modal calendar
+const LSKEY='bowling.tracker.v4'; // v4: lanes + per-frame ball overrides + calendar
 function defaultState(){
   return {
     seasonStart:new Date().toISOString().slice(0,10),
@@ -415,7 +396,7 @@ function defaultState(){
       location:{alley:'', lanes:''},
       handicap:{base:210, percent:90}
     },
-    nights:[] // see upsertNight() for shape
+    nights:[] // [{date,g1,g2,g3,series,high,low,notes:{}, lanes:{a,b,start:'A'|'B'}, meta:{g1:{...},...}, frameBalls:{g1:{1:{sb,sp},...}}]
   };
 }
 function loadState(){const raw=localStorage.getItem(LSKEY); return raw?JSON.parse(raw):defaultState();}
@@ -532,6 +513,7 @@ framesRow.addEventListener('input', (e)=>{
     scoreGame();
   }
 });
+
 function symToPins(sym, prev=0){
   if(!sym) return 0;
   sym=sym.toUpperCase();
@@ -540,12 +522,36 @@ function symToPins(sym, prev=0){
   if(sym==='-') return 0;
   const n=parseInt(sym,10); return isNaN(n)?0:n;
 }
+
 function readFrameSyms(f){
   const r1=document.querySelector(`input[data-f="${f}"][data-r="1"]`).value.toUpperCase();
   const r2=document.querySelector(`input[data-f="${f}"][data-r="2"]`).value.toUpperCase();
   const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.toUpperCase();
   return [r1,r2,r3];
 }
+
+function calcStats(){
+  let strikes=0, spares=0, opens=0;
+  for(let f=1; f<=10; f++){
+    const [r1,r2,r3]=readFrameSyms(f);
+    if(f<10){
+      if(r1==='X'){ strikes+=1; continue; }
+      const p1=symToPins(r1), p2=symToPins(r2,p1), frame=p1+p2;
+      if(r2==='/'){ spares+=1; }
+      else if(frame<10){ opens+=1; }
+    }else{
+      if(r1==='X') strikes++;
+      if(r2==='X') strikes++;
+      if(r3==='X') strikes++;
+      if(r2==='/') spares++;
+      if(r3==='/') spares++;
+      const a=symToPins(r1), b=symToPins(r2, a);
+      if(!(r1==='X') && (a+b<10)) opens++;
+    }
+  }
+  return {strikes, spares, opens};
+}
+
 function readGame(){
   const rolls=[];
   for(let f=1; f<=10; f++){
@@ -598,6 +604,7 @@ function scoreGame(){
 /* ---------- nights & history ---------- */
 function getNights(){ return loadState().nights; }
 function saveNights(n){ const s=loadState(); s.nights=n; saveState(s); }
+
 function weekNumberFor(dateStr, seasonStartStr) {
   const d0 = new Date(seasonStartStr + 'T00:00:00');
   const d1 = new Date(dateStr + 'T00:00:00');
@@ -605,6 +612,7 @@ function weekNumberFor(dateStr, seasonStartStr) {
   const days = Math.floor((d1 - d0)/msPerDay);
   return Math.max(1, Math.floor(days/7) + 1);
 }
+
 function runningAverageUpTo(dateStr){
   const s=loadState();
   const rows=[...s.nights].filter(r=>r.date<=dateStr);
@@ -620,14 +628,16 @@ function hcpPerGameAt(dateStr){
   return h;
 }
 
-/* per-frame ball resolve */
+/* per-frame overrides helpers */
 function collectFrameOverrides(){
-  const fbs={};
+  const fbs={}; // { 1:{sb,sp}, ... } with empty strings filtered later
   document.querySelectorAll('.frameSB').forEach(sel=>{
-    const f=+sel.dataset.f; fbs[f]=fbs[f]||{}; fbs[f].sb = sel.value || '';
+    const f=+sel.dataset.f; fbs[f]=fbs[f]||{};
+    fbs[f].sb = sel.value || '';
   });
   document.querySelectorAll('.frameSP').forEach(sel=>{
-    const f=+sel.dataset.f; fbs[f]=fbs[f]||{}; fbs[f].sp = sel.value || '';
+    const f=+sel.dataset.f; fbs[f]=fbs[f]||{};
+    fbs[f].sp = sel.value || '';
   });
   return fbs;
 }
@@ -638,28 +648,15 @@ function ballForFrame(frame, kind, gameSB, gameSP, frameMap){
   return '';
 }
 
-/* store exact frame snapshot for analytics */
-function snapshotFrames(gameSB, gameSP, frameMap){
-  const frames=[];
-  for(let f=1; f<=10; f++){
-    const [r1,r2,r3]=readFrameSyms(f);
-    const sb = (frameMap?.[f]?.sb) || gameSB || '';
-    const sp = (frameMap?.[f]?.sp) || gameSP || '';
-    frames.push({f,r1,r2,r3,sb,sp});
-  }
-  return frames;
-}
-
-function upsertNight(date,gnum,total,notes, meta, lanes, frameMap, frames){
+function upsertNight(date,gnum,total,notes, meta, lanes, frameMap){
   const s=loadState();
   let row=s.nights.find(r=>r.date===date);
-  if(!row){ row={date,g1:null,g2:null,g3:null,notes:{},series:0,high:0,low:0, meta:{}, lanes:null, frameBalls:{}, frames:{}}; s.nights.push(row); }
+  if(!row){ row={date,g1:null,g2:null,g3:null,notes:{},series:0,high:0,low:0, meta:{}, lanes:null, frameBalls:{}}; s.nights.push(row); }
   row['g'+gnum]=total;
   row.notes['g'+gnum]=notes||'';
   row.meta['g'+gnum] = meta || {};
-  if(lanes) row.lanes = lanes;
+  if(lanes) row.lanes = lanes;  // store once per night
   if(frameMap) { row.frameBalls['g'+gnum] = frameMap; }
-  if(frames)   { row.frames['g'+gnum]     = frames; }
   const nums=[row.g1||0,row.g2||0,row.g3||0];
   row.series=nums.reduce((a,b)=>a+b,0);
   row.high=Math.max(...nums);
@@ -738,81 +735,46 @@ document.getElementById('importCSV').onchange=async(e)=>{
   const s=loadState();
   for(const ln of lines){ if(!ln.trim()) continue; const c=ln.split(',');
     const date=c[iDate]?.trim(); if(!date) continue;
-    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{},meta:{},lanes:null,frameBalls:{},frames:{}}; s.nights.push(r);}
+    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{},meta:{},lanes:null,frameBalls:{}}; s.nights.push(r);}
     if(iG1>-1) r.g1=+c[iG1]||0; if(iG2>-1) r.g2=+c[iG2]||0; if(iG3>-1) r.g3=+c[iG3]||0;
     r.high=(iHigh>-1)?(+c[iHigh]||Math.max(r.g1,r.g2,r.g3)):Math.max(r.g1,r.g2,r.g3);
     r.low =(iLow>-1)?(+c[iLow] ||Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0))) :Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
     r.series=(iSeries>-1)?(+c[iSeries]||(r.g1+r.g2+r.g3)):(r.g1+r.g2+r.g3);
-    if(!r.meta) r.meta={}; if(!r.frameBalls) r.frameBalls={}; if(!r.frames) r.frames={};
+    if(!r.meta) r.meta={}; if(!r.frameBalls) r.frameBalls={};
   }
   saveState(s); renderHistory(); renderAnalytics();
 };
 
-/* ---------- analytics (frame-accurate) ---------- */
+/* ---------- analytics ---------- */
 function renderAnalytics(){
   const s=loadState();
   let strikes=0, spares=0, opens=0, games=0, pins=0;
-
-  // ballAgg[name+role] keeps role specific tallies; we also show role in the table
-  const ballAgg = {}; // key `${name}|Strike` or `${name}|Spare` -> {name,role,games,strikes,spares,opens}
-  function bump(name, role, field, n=1){
-    if(!name) return; const key = `${name}|${role}`;
-    if(!ballAgg[key]) ballAgg[key] = {name, role, games:0, strikes:0, spares:0, opens:0};
-    ballAgg[key][field] += n;
-  }
-  function markGameUse(name, role){
-    if(!name) return; const key = `${name}|${role}`;
-    if(!ballAgg[key]) ballAgg[key] = {name, role, games:0, strikes:0, spares:0, opens:0};
-    ballAgg[key].games += 1;
-  }
+  const ballAgg = {}; // name -> {type:'Strike'|'Spare'|'Mixed', games, strikes, spares, opens}
 
   s.nights.forEach(n=>{
-    ['g1','g2','g3'].forEach(gk=>{
+    ['g1','g2','g3'].forEach((gk,i)=>{
       const g = n[gk];
       if(g){ games++; pins+=g; }
-      const frames = n.frames?.[gk] || [];          // [{f,r1,r2,r3,sb,sp}]
-      const meta   = n.meta?.[gk]   || {};          // (still used for totals fallback)
-      // Mark usage per game: any ball that shows up in frames gets "games used"
-      const seen = new Set();
-      frames.forEach(fr=>{
-        if(fr.sb){ seen.add(fr.sb+'|Strike'); }
-        if(fr.sp){ seen.add(fr.sp+'|Spare'); }
+      const meta = n.meta?.[gk] || {};
+      strikes += meta.strikes||0;
+      spares  += meta.spares||0;
+      opens   += meta.opens||0;
+
+      // attribute to game-level selections as "usage"; frame-level overrides counted too
+      const fbMap = n.frameBalls?.[gk] || {};
+      const usedSet = new Set();
+      Object.values(fbMap).forEach(v=>{ if(v?.sb) usedSet.add(v.sb); if(v?.sp) usedSet.add(v.sp); });
+      if(meta.strikeBall) usedSet.add(meta.strikeBall);
+      if(meta.spareBall)  usedSet.add(meta.spareBall);
+      usedSet.forEach(name=>{
+        if(!name) return;
+        const type = (name === meta.strikeBall) ? 'Strike' : (name === meta.spareBall) ? 'Spare' : 'Mixed';
+        ballAgg[name] = ballAgg[name] || {type,games:0,strikes:0,spares:0,opens:0};
+        ballAgg[name].games += g?1:0;
+        // rough attribution: add strikes/spares/opens proportionally if it matches type; otherwise leave as usage
+        if(type==='Strike') ballAgg[name].strikes += meta.strikes||0;
+        if(type==='Spare')  ballAgg[name].spares  += meta.spares||0;
       });
-      seen.forEach(k=>{ const [nm,role]=k.split('|'); markGameUse(nm,role); });
-
-      // Tally per frame
-      frames.forEach(fr=>{
-        const {r1,r2,r3,sb,sp} = fr;
-        if(fr.f<10){
-          if(r1==='X'){ strikes++; bump(sb,'Strike','strikes'); return; }
-          const p1=symToPins(r1), p2=symToPins(r2,p1);
-          if(r2==='/'){ spares++; bump(sp,'Spare','spares'); }
-          else if(p1+p2<10){ opens++; bump(sp||sb,'Spare','opens'); } // open → credit to 2nd shot ball preference
-        }else{
-          // 10th frame – handle rolls individually
-          // strike(s)
-          if(r1==='X'){ strikes++; bump(sb,'Strike','strikes'); }
-          if(r2==='X'){ strikes++; bump(sb,'Strike','strikes'); } // most keep strike ball for fill; adjust manually if you switch via frame SP (rare)
-          if(r3==='X'){ strikes++; bump(sb,'Strike','strikes'); }
-
-          // spare(s)
-          if(r2==='/'){ spares++; bump(sp,'Spare','spares'); }
-          if(r3==='/'){ spares++; bump(sp,'Spare','spares'); }
-
-          // open if first two < 10 and not spare
-          const a=symToPins(r1), b=symToPins(r2,a);
-          if(!(r1==='X') && (a+b<10)){ opens++; bump(sp||sb,'Spare','opens'); }
-        }
-      });
-
-      // If no frame snapshots (older saves), fallback to meta totals into game-level selections
-      if(!frames.length && (meta.strikes||meta.spares||meta.opens)){
-        strikes += meta.strikes||0;
-        spares  += meta.spares||0;
-        opens   += meta.opens||0;
-        if(meta.strikeBall){ markGameUse(meta.strikeBall,'Strike'); bump(meta.strikeBall,'Strike','strikes', meta.strikes||0); }
-        if(meta.spareBall){  markGameUse(meta.spareBall,'Spare');   bump(meta.spareBall,'Spare','spares',  meta.spares||0); }
-      }
     });
   });
 
@@ -827,10 +789,8 @@ function renderAnalytics(){
   tbar.append(mk('Games',games),mk('Series Pins',pins),mk('Scratch Avg',avg?avg.toFixed(2):'—'),mk('Strikes',strikes),mk('Spares',spares),mk('Opens',opens),mk(`HCP/Game (Base ${base}, ${pct}%)`,hcpNow));
 
   const tb=document.querySelector('#ballBreakdown tbody');
-  const rows = Object.values(ballAgg)
-    .sort((a,b)=> (b.strikes+b.spares+b.opens) - (a.strikes+a.spares+a.opens))
-    .map(obj=>`<tr><td>${obj.name}</td><td>${obj.role}</td><td>${obj.games}</td><td>${obj.strikes}</td><td>${obj.spares}</td><td>${obj.opens}</td></tr>`).join('');
-  tb.innerHTML = rows || `<tr><td colspan="6" class="hint">Play a few games with frame snapshots to see per-ball attribution.</td></tr>`;
+  const rows = Object.entries(ballAgg).map(([name,obj])=>`<tr><td>${name}</td><td>${obj.type}</td><td>${obj.games}</td><td>${obj.strikes}</td><td>${obj.spares}</td><td>${obj.opens}</td></tr>`).join('');
+  tb.innerHTML = rows || `<tr><td colspan="6" class="hint">Add equipment in Profile and save games with ball selections or per-frame overrides.</td></tr>`;
 
   document.getElementById('curAvg').value = avg?avg.toFixed(2):'0.00';
   document.getElementById('hcpBase').value = base;
@@ -850,6 +810,7 @@ document.getElementById('saveHcp').onclick=()=>{
 /* ---------- entry actions ---------- */
 function clearFrames(){
   document.querySelectorAll('#framesRow .shot').forEach(i=>i.value='');
+  // reset per-frame selects to (default)
   document.querySelectorAll('.frameSB,.frameSP').forEach(s=> s.value='');
   document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
   renderFrameTotals();
@@ -898,6 +859,7 @@ document.getElementById('newNight').onclick = ()=>{
   clearFrames(); refreshPillsFor(today);
   const p=getProfile();
   document.getElementById('entryAlley').value=p.location.alley||'';
+  // lanes left blank by default each night
   refreshEquipmentSelects();
   showStartLanePill();
 };
@@ -919,39 +881,23 @@ document.getElementById('saveGame').onclick = () => {
 
   const strikeBall = document.getElementById('entryStrikeBall').value || '';
   const spareBall  = document.getElementById('entrySpareBall').value || '';
-  const frameMap   = collectFrameOverrides();
-  const frames     = snapshotFrames(strikeBall, spareBall, frameMap); // ← exact snapshot
-
-  // quick counts for alert
-  let sC=0, spC=0, oC=0;
-  frames.forEach(fr=>{
-    if(fr.f<10){
-      if(fr.r1==='X'){ sC++; return; }
-      const p1=symToPins(fr.r1), p2=symToPins(fr.r2,p1);
-      if(fr.r2==='/'){ spC++; } else if(p1+p2<10){ oC++; }
-    }else{
-      if(fr.r1==='X') sC++; if(fr.r2==='X') sC++; if(fr.r3==='X') sC++;
-      if(fr.r2==='/') spC++; if(fr.r3==='/') spC++;
-      const a=symToPins(fr.r1), b=symToPins(fr.r2,a);
-      if(!(fr.r1==='X') && (a+b<10)) oC++;
-    }
-  });
+  const sts = calcStats();
 
   const lanes = {
     a: document.getElementById('entryLaneA').value.trim(),
     b: document.getElementById('entryLaneB').value.trim(),
     start: document.getElementById('entryStart').value || 'A'
   };
+  const frameMap = collectFrameOverrides();
 
   upsertNight(
     date, gnum, total, notes,
-    { strikes:sC, spares:spC, opens:oC, strikeBall, spareBall },
+    { ...sts, strikeBall, spareBall },
     lanes,
-    frameMap,
-    frames
+    frameMap
   );
 
-  alert(`Saved ${date} • Game ${gnum}: ${total}\nStrikes: ${sC} • Spares: ${spC} • Opens: ${oC}\nStarting lane: ${computeStartLaneForGame(gnum)}`);
+  alert(`Saved ${date} • Game ${gnum}: ${total}\nStrikes: ${sts.strikes} • Spares: ${sts.spares} • Opens: ${sts.opens}\nStarting lane: ${computeStartLaneForGame(gnum)}`);
   if (gnum === '1' || gnum === '2') {
     document.getElementById('gameNum').value = String(Number(gnum) + 1);
     clearFrames();
@@ -968,12 +914,12 @@ document.getElementById('saveQuickNotes').onclick = ()=>{
 };
 document.getElementById('qNotes').value = localStorage.getItem('bowling.quicknotes')||'';
 
-/* ---------- mini + modal calendar ---------- */
-function renderMiniCal(targetId, dateObj=new Date(), onPick){
+/* ---------- mini calendar ---------- */
+function renderMiniCal(targetId, dateObj=new Date()){
   const el=document.getElementById(targetId);
   const y=dateObj.getFullYear(), m=dateObj.getMonth();
   const first=new Date(y,m,1);
-  const startDay=(first.getDay()+6)%7; // Monday=0
+  const startDay=(first.getDay()+6)%7; // make Monday=0
   const daysInMonth=new Date(y,m+1,0).getDate();
   const today=new Date(); const todayStr=today.toISOString().slice(0,10);
   const selStr=(document.getElementById('date').value)||'';
@@ -993,24 +939,15 @@ function renderMiniCal(targetId, dateObj=new Date(), onPick){
     const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     if(ds===todayStr) c.classList.add('today');
     if(ds===selStr) c.classList.add('sel');
-    c.textContent=d; c.onclick=()=>{ if(onPick) onPick(ds); };
+    c.textContent=d; c.onclick=()=>{ document.getElementById('date').value=ds; tabs.find(t=>t.dataset.panel==='entry').click(); };
     grid.append(c);
   }
   el.append(grid);
 
-  prev.onclick=()=>renderMiniCal(targetId,new Date(y,m-1,1),onPick);
-  next.onclick=()=>renderMiniCal(targetId,new Date(y,m+1,1),onPick);
+  prev.onclick=()=>renderMiniCal(targetId,new Date(y,m-1,1));
+  next.onclick=()=>renderMiniCal(targetId,new Date(y,m+1,1));
 }
-// Plan tab mini
-renderMiniCal('miniCal', new Date(), (ds)=>{ document.getElementById('date').value=ds; tabs.find(t=>t.dataset.panel==='entry').click(); });
-
-// Modal calendar
-const calModal=document.getElementById('calModal');
-const openCal=document.getElementById('openCal');
-const closeCal=document.getElementById('closeCal');
-openCal.onclick=()=>{ calModal.style.display='flex'; renderMiniCal('modalCal', new Date(), (ds)=>{ document.getElementById('date').value=ds; calModal.style.display='none'; }); };
-closeCal.onclick=()=>{ calModal.style.display='none'; };
-calModal.addEventListener('click',(e)=>{ if(e.target===calModal) calModal.style.display='none'; });
+renderMiniCal('miniCal');
 
 /* init defaults */
 document.getElementById('date').value = new Date().toISOString().slice(0,10);
