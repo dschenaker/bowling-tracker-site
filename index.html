@@ -15,14 +15,17 @@
     color:#e7ecf3;                   /* default text */
     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   }
-  .wrap{max-width:960px;margin:0 auto;padding:20px}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
   .card{background:#171a21;border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
   h1{margin:0 0 8px;font-size:24px}
   h2{margin:12px 0 8px;font-size:18px;color:#9fb2cc}
   img{width:100%;height:auto;border-radius:12px}
 
-  .tabs{display:flex;gap:8px;margin:12px 0}
-  .tab{flex:1;text-align:center;padding:10px 12px;border-radius:10px;background:#0b0e13;color:#a9bfdc;cursor:pointer;border:1px solid #2a3140}
+  .grid2{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:900px){.grid2{grid-template-columns:1fr 1fr}}
+
+  .tabs{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  .tab{flex:1;text-align:center;padding:10px 12px;border-radius:10px;background:#0b0e13;color:#a9bfdc;cursor:pointer;border:1px solid #2a3140;min-width:140px}
   .tab.active{background:#2c84ff;color:#fff;border-color:#2c84ff;font-weight:700}
 
   label{font-size:14px;color:#cfe0fb;display:block;margin-bottom:4px}
@@ -33,8 +36,13 @@
   .btn.ghost{background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;font-size:12px}
   .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .col{flex:1 1 220px}
   .hint{font-size:13px;color:#9fb2cc}
   .foot{margin-top:10px;color:#9fb2cc;font-size:13px}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;border-radius:16px;padding:3px 8px;margin:2px 4px 2px 0}
+  .chip button{background:transparent;border:none;color:#9fb2cc;cursor:pointer}
 
   /* ===== Scoresheet ===== */
   #framesRow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
@@ -47,25 +55,20 @@
   .shots{display:grid;grid-template-columns:repeat(2,28px);gap:6px}
   .shots.triple{grid-template-columns:repeat(3,28px)}
 
-  /* ← SIMPLE square inputs — big, always-visible characters */
   .shot{
     width:28px;height:28px;padding:0;margin:0;
     text-align:center;
     font:900 18px/28px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     text-transform:uppercase; font-variant-numeric:tabular-nums;
     background:#0f1624; border:1px solid #3b4660; border-radius:4px;
-    color:#ffffff !important;                 /* text is white */
-    -webkit-text-fill-color:#ffffff !important; /* iOS/Safari */
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
     caret-color:#2c84ff;
     appearance:none;
   }
   .shot:focus{outline:2px solid #2c84ff}
   .shot[disabled]{opacity:.45}
-
-  /* Stop browser theming from inverting form colors */
   .shot, input, select, textarea { color-scheme: light; }
-
-  /* Fight iOS/Chrome autofill */
   input:-webkit-autofill{
     -webkit-text-fill-color:#ffffff !important;
     -webkit-box-shadow:0 0 0 1000px #0f1624 inset !important;
@@ -83,6 +86,9 @@
   table{width:100%;border-collapse:collapse}
   th,td{border:1px solid #2a3140;padding:6px 8px;text-align:center}
   thead th{background:#0b0e13;color:#cfe0fb}
+
+  .statCard{background:#0b0e13;border:1px solid #2a3140;border-radius:12px;padding:12px;min-width:160px}
+  .statBig{font-weight:900;font-size:22px}
 </style>
 </head>
 <body>
@@ -94,12 +100,14 @@
       <div class="tab active" data-panel="plan">Lane Plan</div>
       <div class="tab" data-panel="entry">Score Entry</div>
       <div class="tab" data-panel="history">History</div>
+      <div class="tab" data-panel="analytics">Analytics</div>
+      <div class="tab" data-panel="profile">Profile</div>
     </div>
 
     <!-- PLAN -->
     <section id="plan" class="panel">
-      <div class="flex" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
-        <div style="flex:1 1 520px;min-width:280px">
+      <div class="grid2">
+        <div>
           <img src="assets/BigBen-LanePlan.png" alt="Big Ben lane plan">
           <p class="foot">Solid: Forge (~13 → 8 → pocket). Dashed: Jackal (~17 → 10 → pocket). Blue = oil to 44 ft.</p>
           <div class="flex">
@@ -107,7 +115,7 @@
             <a class="btn ghost" href="sheets/League Night Entry (import to your tracker).xlsx" download>Entry Sheet (XLSX)</a>
           </div>
         </div>
-        <div style="flex:1 1 320px;min-width:260px">
+        <div>
           <h2>Tonight’s Quick Notes</h2>
           <label for="qNotes">Optional — saved on this device</label>
           <textarea id="qNotes" rows="6" placeholder="e.g., Start Forge 13→8. If flat 10s by frame 5, move 2–1 or switch to Jackal."></textarea>
@@ -122,55 +130,93 @@
     <!-- ENTRY -->
     <section id="entry" class="panel" style="display:none">
       <h2>Score Entry (X, /, -, 0–9) — Auto-scoring</h2>
-      <div class="grid">
-        <div class="flex">
-          <div><label for="date">Date</label><input id="date" type="date"></div>
-          <div>
-            <label for="gameNum">Game</label>
-            <select id="gameNum">
-              <option value="1">Game 1</option>
-              <option value="2">Game 2</option>
-              <option value="3">Game 3</option>
-            </select>
-          </div>
-          <div><label>Total</label><div class="pill" id="gameTotal">0</div></div>
+
+      <div class="row">
+        <div class="col">
+          <label for="date">Date</label>
+          <input id="date" type="date">
+        </div>
+        <div class="col">
+          <label for="gameNum">Game</label>
+          <select id="gameNum">
+            <option value="1">Game 1</option>
+            <option value="2">Game 2</option>
+            <option value="3">Game 3</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Active Strike Ball</label>
+          <select id="entryStrikeBall"></select>
+        </div>
+        <div class="col">
+          <label>Active Spare Ball</label>
+          <select id="entrySpareBall"></select>
+        </div>
+        <div class="col">
+          <label>Total</label>
+          <div class="pill" id="gameTotal">0</div>
+        </div>
+        <div class="col" style="display:flex;gap:8px;align-items:flex-end">
           <button class="btn ghost" id="newNight" type="button">New Night</button>
           <button class="btn ghost" id="clearNight" type="button">Clear Night</button>
         </div>
+      </div>
 
-        <div id="framesRow"></div>
-
-        <div>
-          <label for="notes">Notes for this game (saved with entry)</label>
-          <textarea id="notes" rows="4" placeholder="e.g., Flat 10s frame 6, moved 2–1, carry improved."></textarea>
+      <div class="row">
+        <div class="col">
+          <label>Alley</label>
+          <input id="entryAlley" placeholder="(from Profile)">
         </div>
-
-        <div class="flex">
-          <button class="btn" id="saveGame">Save Game</button>
-          <button class="btn ghost" id="resetGame">Clear</button>
-          <span class="hint">Tip: Enter 10th as X/X/X or 9/9 etc.</span>
+        <div class="col">
+          <label># Lanes</label>
+          <input id="entryLanes" inputmode="numeric" placeholder="(from Profile)">
         </div>
+      </div>
 
-        <div class="flex">
-          <span class="pill" id="g1Pill">G1: —</span>
-          <span class="pill" id="g2Pill">G2: —</span>
-          <span class="pill" id="g3Pill">G3: —</span>
-          <span class="pill" id="seriesPill">Series: —</span>
-        </div>
+      <div id="framesRow" style="margin-top:8px"></div>
+
+      <div style="margin-top:8px">
+        <label for="notes">Notes for this game (saved with entry)</label>
+        <textarea id="notes" rows="4" placeholder="e.g., Flat 10s frame 6, moved 2–1, carry improved."></textarea>
+      </div>
+
+      <div class="flex" style="margin-top:8px">
+        <button class="btn" id="saveGame">Save Game</button>
+        <button class="btn ghost" id="resetGame">Clear</button>
+        <span class="hint">Tip: Enter 10th as X/X/X or 9/9 etc.</span>
+      </div>
+
+      <div class="flex" style="margin-top:6px">
+        <span class="pill" id="g1Pill">G1: —</span>
+        <span class="pill" id="g2Pill">G2: —</span>
+        <span class="pill" id="g3Pill">G3: —</span>
+        <span class="pill" id="seriesPill">Series: —</span>
       </div>
     </section>
 
     <!-- HISTORY -->
     <section id="history" class="panel" style="display:none">
       <h2>History (saved on this device)</h2>
+
       <div class="flex" style="margin-bottom:8px">
-        <div><label for="seasonStart">Season start date (Week 1)</label><input id="seasonStart" type="date"></div>
+        <div>
+          <label for="seasonStart">Season start date (Week 1)</label>
+          <input id="seasonStart" type="date">
+        </div>
         <button class="btn" id="saveSeasonStart" type="button">Save Season Start</button>
         <span class="hint">Week # = weeks since this date (rounded up)</span>
       </div>
 
       <table id="histTable">
-        <thead><tr><th>Week</th><th>Date</th><th>G1</th><th>G2</th><th>G3</th><th>High</th><th>Low</th><th>Series</th><th>Copy</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Week</th><th>Date</th>
+            <th>G1</th><th>G2</th><th>G3</th>
+            <th>High</th><th>Low</th><th>Series</th>
+            <th>HCP/Game</th><th>Series+HCP</th>
+            <th>Copy</th>
+          </tr>
+        </thead>
         <tbody></tbody>
       </table>
 
@@ -180,20 +226,114 @@
         <button class="btn ghost" id="importBtn">Import CSV</button>
         <button class="btn" id="clearAll">Clear All (device)</button>
       </div>
-      <p class="foot">“Copy” puts a tab-separated row on your clipboard (Week, Date, G1, G2, G3, High, Low, Series) to paste into your **Main** Google Sheet tab.</p>
+
+      <p class="foot">“Copy” puts a tab-separated row on your clipboard to paste into your **Main** Google Sheet tab.</p>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="analytics" class="panel" style="display:none">
+      <h2>Analytics</h2>
+
+      <div class="flex" id="totalsBar">
+        <!-- stat cards injected -->
+      </div>
+
+      <h2 style="margin-top:14px">By Ball</h2>
+      <table id="ballBreakdown">
+        <thead>
+          <tr><th>Ball</th><th>Type</th><th>Games Used</th><th>Strikes</th><th>Spares</th><th>Opens</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h2 style="margin-top:14px">Handicap Calculator</h2>
+      <div class="row">
+        <div class="col">
+          <label>Base (e.g., 210)</label>
+          <input id="hcpBase" inputmode="numeric">
+        </div>
+        <div class="col">
+          <label>Percent (e.g., 90)</label>
+          <input id="hcpPct" inputmode="numeric">
+        </div>
+        <div class="col">
+          <label>Current Scratch Avg (auto)</label>
+          <input id="curAvg" disabled>
+        </div>
+        <div class="col" style="display:flex;gap:8px;align-items:flex-end">
+          <button class="btn" id="saveHcp">Save HCP Settings</button>
+          <span class="hint" id="hcpSaved"></span>
+        </div>
+      </div>
+      <p class="foot">Handicap per game = max(0, (Base − Average) × Percent%). We use your running scratch average.</p>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" class="panel" style="display:none">
+      <h2>Player Data</h2>
+      <div class="row">
+        <div class="col"><label>First Name</label><input id="pFirst"></div>
+        <div class="col"><label>Last Name</label><input id="pLast"></div>
+        <div class="col"><label>Email</label><input id="pEmail" inputmode="email"></div>
+        <div class="col"><label>Phone</label><input id="pPhone" inputmode="tel"></div>
+      </div>
+      <div class="row">
+        <div class="col"><label>Years Bowling</label><input id="pYears" inputmode="numeric"></div>
+        <div class="col"><label>Starting HDCP Score</label><input id="pStartHcp" inputmode="numeric"></div>
+        <div class="col"><label>HCP Base (e.g., 210)</label><input id="pHcpBase" inputmode="numeric"></div>
+        <div class="col"><label>HCP Percent (e.g., 90)</label><input id="pHcpPct" inputmode="numeric"></div>
+      </div>
+
+      <h2 style="margin-top:14px">Equipment</h2>
+      <div class="row">
+        <div class="col">
+          <label>Strike Ball — Make</label><input id="sbMake">
+        </div>
+        <div class="col">
+          <label>Strike Ball — Model</label><input id="sbModel">
+        </div>
+        <div class="col" style="display:flex;align-items:flex-end">
+          <button class="btn" id="addStrikeBall">Add Strike Ball</button>
+        </div>
+      </div>
+      <div id="strikeList" class="flex"></div>
+
+      <div class="row" style="margin-top:8px">
+        <div class="col">
+          <label>Spare Ball — Make</label><input id="spbMake">
+        </div>
+        <div class="col">
+          <label>Spare Ball — Model</label><input id="spbModel">
+        </div>
+        <div class="col" style="display:flex;align-items:flex-end">
+          <button class="btn" id="addSpareBall">Add Spare Ball</button>
+        </div>
+      </div>
+      <div id="spareList" class="flex"></div>
+
+      <h2 style="margin-top:14px">Location</h2>
+      <div class="row">
+        <div class="col"><label>Bowling Alley Name</label><input id="locAlley"></div>
+        <div class="col"><label>Number of Lanes</label><input id="locLanes" inputmode="numeric"></div>
+      </div>
+
+      <div class="flex" style="margin-top:10px">
+        <button class="btn" id="saveProfile">Save Profile</button>
+        <span class="hint" id="profileSaved"></span>
+      </div>
     </section>
   </div>
 </div>
 
 <script>
-/* -------- Tabs -------- */
+/* ---------- tabs ---------- */
 const tabs=[...document.querySelectorAll('.tab')];
 tabs.forEach(t=>t.onclick=()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
   document.getElementById(t.dataset.panel).style.display='block';
 });
 
-/* -------- Build frames (plain inputs) -------- */
+/* ---------- frames ---------- */
 const framesRow=document.getElementById('framesRow');
 function buildFrames(){
   framesRow.innerHTML='';
@@ -216,7 +356,126 @@ function buildFrames(){
 }
 buildFrames();
 
-/* -------- Scoring -------- */
+/* ---------- state & profile ---------- */
+const LSKEY='bowling.tracker.v3'; // bumped to v3 for profile/equipment
+function defaultState(){
+  return {
+    seasonStart:new Date().toISOString().slice(0,10),
+    profile:{
+      player:{first:'',last:'',email:'',phone:'',years:'',startHcp:''},
+      equipment:{strikeBalls:[], spareBalls:[]},
+      location:{alley:'', lanes:''},
+      handicap:{base:210, percent:90}
+    },
+    nights:[] // [{date,g1,g2,g3,series,high,low, notes:{g1:'',...}, meta:{g1:{strikes,spares,opens, strikeBall, spareBall},...}}]
+  };
+}
+function loadState(){const raw=localStorage.getItem(LSKEY); return raw?JSON.parse(raw):defaultState();}
+function saveState(s){localStorage.setItem(LSKEY,JSON.stringify(s));}
+
+/* helpers */
+function getProfile(){ return loadState().profile; }
+function setProfile(p){ const s=loadState(); s.profile=p; saveState(s); }
+
+/* ---------- equipment UI helpers ---------- */
+function renderChips(){
+  const p=getProfile();
+  const strikeList=document.getElementById('strikeList'); strikeList.innerHTML='';
+  p.equipment.strikeBalls.forEach((b,idx)=>{
+    const div=document.createElement('div');
+    div.className='chip'; div.innerHTML=`<span>${b.make} — ${b.model}</span> <button data-x="s${idx}" title="remove">✕</button>`;
+    strikeList.appendChild(div);
+  });
+  const spareList=document.getElementById('spareList'); spareList.innerHTML='';
+  p.equipment.spareBalls.forEach((b,idx)=>{
+    const div=document.createElement('div');
+    div.className='chip'; div.innerHTML=`<span>${b.make} — ${b.model}</span> <button data-x="p${idx}" title="remove">✕</button>`;
+    spareList.appendChild(div);
+  });
+}
+function refreshEquipmentSelects(){
+  const p=getProfile();
+  const sbSel=document.getElementById('entryStrikeBall');
+  const spSel=document.getElementById('entrySpareBall');
+  const mkOptions=(arr)=>['<option value="">(select)</option>'].concat(arr.map(b=>`<option>${b.make} — ${b.model}</option>`)).join('');
+  sbSel.innerHTML=mkOptions(p.equipment.strikeBalls);
+  spSel.innerHTML=mkOptions(p.equipment.spareBalls);
+}
+
+/* ---------- profile form load/save ---------- */
+function loadProfileToForm(){
+  const p=getProfile();
+  // player
+  document.getElementById('pFirst').value=p.player.first||'';
+  document.getElementById('pLast').value=p.player.last||'';
+  document.getElementById('pEmail').value=p.player.email||'';
+  document.getElementById('pPhone').value=p.player.phone||'';
+  document.getElementById('pYears').value=p.player.years||'';
+  document.getElementById('pStartHcp').value=p.player.startHcp||'';
+  // handicap
+  document.getElementById('pHcpBase').value=p.handicap.base;
+  document.getElementById('pHcpPct').value=p.handicap.percent;
+  // location
+  document.getElementById('locAlley').value=p.location.alley||'';
+  document.getElementById('locLanes').value=p.location.lanes||'';
+  // lists
+  renderChips();
+  refreshEquipmentSelects();
+  // entry prefill for location
+  document.getElementById('entryAlley').value=p.location.alley||'';
+  document.getElementById('entryLanes').value=p.location.lanes||'';
+  // analytics HCP inputs
+  document.getElementById('hcpBase').value=p.handicap.base;
+  document.getElementById('hcpPct').value=p.handicap.percent;
+}
+loadProfileToForm();
+
+document.getElementById('saveProfile').onclick=()=>{
+  const p=getProfile();
+  p.player.first=document.getElementById('pFirst').value.trim();
+  p.player.last =document.getElementById('pLast').value.trim();
+  p.player.email=document.getElementById('pEmail').value.trim();
+  p.player.phone=document.getElementById('pPhone').value.trim();
+  p.player.years=document.getElementById('pYears').value.trim();
+  p.player.startHcp=document.getElementById('pStartHcp').value.trim();
+  p.location.alley=document.getElementById('locAlley').value.trim();
+  p.location.lanes=document.getElementById('locLanes').value.trim();
+  p.handicap.base= Number(document.getElementById('pHcpBase').value)||210;
+  p.handicap.percent= Number(document.getElementById('pHcpPct').value)||90;
+  setProfile(p);
+  loadProfileToForm();
+  const el=document.getElementById('profileSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
+};
+
+document.getElementById('strikeList').onclick=(e)=>{
+  const btn=e.target.closest('button[data-x]'); if(!btn) return;
+  const idx=+btn.dataset.x.slice(1); const p=getProfile();
+  p.equipment.strikeBalls.splice(idx,1); setProfile(p); renderChips(); refreshEquipmentSelects();
+};
+document.getElementById('spareList').onclick=(e)=>{
+  const btn=e.target.closest('button[data-x]'); if(!btn) return;
+  const idx=+btn.dataset.x.slice(1); const p=getProfile();
+  p.equipment.spareBalls.splice(idx,1); setProfile(p); renderChips(); refreshEquipmentSelects();
+};
+
+document.getElementById('addStrikeBall').onclick=()=>{
+  const make=document.getElementById('sbMake').value.trim();
+  const model=document.getElementById('sbModel').value.trim();
+  if(!make||!model) return alert('Enter Strike Ball make & model');
+  const p=getProfile(); p.equipment.strikeBalls.push({make,model}); setProfile(p);
+  document.getElementById('sbMake').value=''; document.getElementById('sbModel').value='';
+  renderChips(); refreshEquipmentSelects();
+};
+document.getElementById('addSpareBall').onclick=()=>{
+  const make=document.getElementById('spbMake').value.trim();
+  const model=document.getElementById('spbModel').value.trim();
+  if(!make||!model) return alert('Enter Spare Ball make & model');
+  const p=getProfile(); p.equipment.spareBalls.push({make,model}); setProfile(p);
+  document.getElementById('spbMake').value=''; document.getElementById('spbModel').value='';
+  renderChips(); refreshEquipmentSelects();
+};
+
+/* ---------- scoring & stats ---------- */
 function normalize(sym){ if(!sym) return ''; sym=sym.toUpperCase(); return /[X\/\-0-9]/.test(sym)?sym:''; }
 framesRow.addEventListener('input', (e)=>{
   if(e.target.classList.contains('shot')){
@@ -234,12 +493,41 @@ function symToPins(sym, prev=0){
   const n=parseInt(sym,10); return isNaN(n)?0:n;
 }
 
+function readFrameSyms(f){
+  const r1=document.querySelector(`input[data-f="${f}"][data-r="1"]`).value.toUpperCase();
+  const r2=document.querySelector(`input[data-f="${f}"][data-r="2"]`).value.toUpperCase();
+  const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.toUpperCase();
+  return [r1,r2,r3];
+}
+
+function calcStats(){
+  // counts frames: strikes (# of X), spares (# of /), opens (frames with <10 after two balls for frames 1-9, or 10th first two <10)
+  let strikes=0, spares=0, opens=0;
+  for(let f=1; f<=10; f++){
+    const [r1,r2,r3]=readFrameSyms(f);
+    if(f<10){
+      if(r1==='X'){ strikes+=1; continue; }
+      const p1=symToPins(r1), p2=symToPins(r2,p1), frame=p1+p2;
+      if(r2==='/'){ spares+=1; }
+      else if(frame<10){ opens+=1; }
+    }else{
+      // 10th: count Xs anywhere; count '/' on r2 or r3; open if first two balls < 10 and not strike
+      if(r1==='X') strikes++;
+      if(r2==='X') strikes++;
+      if(r3==='X') strikes++;
+      if(r2==='/') spares++;
+      if(r3==='/') spares++;
+      const a=symToPins(r1), b=symToPins(r2, a);
+      if(!(r1==='X') && (a+b<10)) opens++;
+    }
+  }
+  return {strikes, spares, opens};
+}
+
 function readGame(){
   const rolls=[];
   for(let f=1; f<=10; f++){
-    const r1=document.querySelector(`input[data-f="${f}"][data-r="1"]`).value.toUpperCase();
-    const r2=document.querySelector(`input[data-f="${f}"][data-r="2"]`).value.toUpperCase();
-    const r3=document.querySelector(`input[data-f="${f}"][data-r="3"]`).value.toUpperCase();
+    const [r1,r2,r3]=readFrameSyms(f);
     if(f<10){
       if(r1==='X'){ rolls.push(10); }
       else{ const p1=symToPins(r1), p2=symToPins(r2,p1); rolls.push(p1,p2); }
@@ -253,7 +541,6 @@ function readGame(){
   }
   return rolls;
 }
-
 function renderFrameTotals(){
   const rolls=readGame(); let i=0,total=0;
   for(let f=1; f<=10; f++){
@@ -270,7 +557,6 @@ function renderFrameTotals(){
     if(cell) cell.textContent=total?String(total):'';
   }
 }
-
 function scoreGame(){
   const rolls=readGame(); let i=0,total=0;
   for(let f=1; f<=10; f++){
@@ -286,101 +572,99 @@ function scoreGame(){
   renderFrameTotals();
   return total;
 }
-renderFrameTotals();
 
-/* -------- Storage & History (unchanged logic) -------- */
-const LSKEY='bowling.tracker.v2';
-function loadState(){const raw=localStorage.getItem(LSKEY);
-  if(!raw){return {seasonStart:new Date().toISOString().slice(0,10), nights:[]};}
-  return JSON.parse(raw);}
-function saveState(s){localStorage.setItem(LSKEY,JSON.stringify(s));renderHistory();}
-function getNights(){return loadState().nights;}
-function weekNumberFor(d, start){const d0=new Date(start+'T00:00:00'), d1=new Date(d+'T00:00:00');
-  return Math.max(1,Math.floor((d1-d0)/(7*24*60*60*1000))+1);}
+/* ---------- nights & history ---------- */
+function getNights(){ return loadState().nights; }
+function saveNights(n){ const s=loadState(); s.nights=n; saveState(s); }
 
-function upsertNight(date,gnum,total,notes){
-  const s=loadState(); let row=s.nights.find(r=>r.date===date);
-  if(!row){row={date,g1:null,g2:null,g3:null,notes:{}};s.nights.push(row);}
-  row['g'+gnum]=total; row.notes['g'+gnum]=notes||'';
+function weekNumberFor(dateStr, seasonStartStr) {
+  const d0 = new Date(seasonStartStr + 'T00:00:00');
+  const d1 = new Date(dateStr + 'T00:00:00');
+  const msPerDay = 24*60*60*1000;
+  const days = Math.floor((d1 - d0)/msPerDay);
+  return Math.max(1, Math.floor(days/7) + 1);
+}
+
+function runningAverageUpTo(dateStr){
+  const s=loadState();
+  const rows=[...s.nights].filter(r=>r.date<=dateStr);
+  const games=rows.reduce((acc,r)=>acc + (r.g1?1:0)+(r.g2?1:0)+(r.g3?1:0),0);
+  if(!games) return 0;
+  const pins=rows.reduce((acc,r)=>acc + (r.g1||0)+(r.g2||0)+(r.g3||0),0);
+  return pins/games;
+}
+function hcpPerGameAt(dateStr){
+  const p=getProfile();
+  const avg=runningAverageUpTo(dateStr) || 0;
+  const h = Math.max(0, Math.round((p.handicap.base - avg) * (p.handicap.percent/100)));
+  return h;
+}
+
+function upsertNight(date,gnum,total,notes, meta){
+  const s=loadState();
+  let row=s.nights.find(r=>r.date===date);
+  if(!row){ row={date,g1:null,g2:null,g3:null,notes:{},series:0,high:0,low:0, meta:{}}; s.nights.push(row); }
+  row['g'+gnum]=total;
+  row.notes['g'+gnum]=notes||'';
+  row.meta['g'+gnum] = meta || {};
   const nums=[row.g1||0,row.g2||0,row.g3||0];
   row.series=nums.reduce((a,b)=>a+b,0);
-  row.high=Math.max(...nums); row.low=Math.min(...nums.filter(n=>n>0).concat([0]));
-  saveState(s); updatePills(date);
+  row.high=Math.max(...nums);
+  row.low =Math.min(...nums.filter(n=>n>0).concat([0]));
+  saveState(s);
+  renderHistory();
+  renderAnalytics();
+  updatePills(date);
 }
-function updatePills(date){
-  const row=getNights().find(r=>r.date===date);
-  document.getElementById('g1Pill').textContent='G1: '+(row?.g1??'—');
-  document.getElementById('g2Pill').textContent='G2: '+(row?.g2??'—');
-  document.getElementById('g3Pill').textContent='G3: '+(row?.g3??'—');
-  document.getElementById('seriesPill').textContent='Series: '+(row?.series??'—');
-}
+
 function renderHistory(){
-  const tb=document.querySelector('#histTable tbody'); const s=loadState();
+  const tb=document.querySelector('#histTable tbody');
+  const s=loadState();
+  if(!s.seasonStart && s.nights.length){ s.seasonStart=s.nights.map(n=>n.date).sort()[0]; saveState(s); }
   document.getElementById('seasonStart').value=s.seasonStart;
-  const rows=[...s.nights].sort((a,b)=>a.date<b.date?-1:1);
-  tb.innerHTML=rows.map(r=>{
+
+  const rows=[...s.nights].sort((a,b)=> (a.date<b.date?-1:1));
+  tb.innerHTML = rows.map(r=>{
     const wk=weekNumberFor(r.date,s.seasonStart);
+    const hcp = hcpPerGameAt(r.date);
+    const serHcp = (r.series||0) + hcp * ( (r.g1?1:0) + (r.g2?1:0) + (r.g3?1:0) );
     return `<tr>
-      <td>${wk}</td><td>${r.date}</td>
-      <td>${r.g1??''}</td><td>${r.g2??''}</td><td>${r.g3??''}</td>
-      <td>${r.high??''}</td><td>${r.low??''}</td><td><strong>${r.series??''}</strong></td>
-      <td><button class="btn ghost" data-copy="${wk}\t${r.date}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}">Copy</button></td>
-    </tr>`}).join('');
+      <td>${wk}</td>
+      <td>${r.date}</td>
+      <td>${r.g1??''}</td>
+      <td>${r.g2??''}</td>
+      <td>${r.g3??''}</td>
+      <td>${r.high??''}</td>
+      <td>${r.low??''}</td>
+      <td><strong>${r.series??''}</strong></td>
+      <td>${hcp}</td>
+      <td>${serHcp}</td>
+      <td><button class="btn ghost" data-copy="${wk}\t${r.date}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}\t${hcp}\t${serHcp}">Copy</button></td>
+    </tr>`;
+  }).join('');
 }
 renderHistory();
 
-/* -------- Entry actions -------- */
-function clearFrames(){
-  document.querySelectorAll('#framesRow .shot').forEach(i=>i.value='');
-  document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
-  renderFrameTotals();
-}
-function refreshPillsFor(d){updatePills(d); const row=getNights().find(r=>r.date===d);
-  if(!row){document.getElementById('g1Pill').textContent='G1: —';
-           document.getElementById('g2Pill').textContent='G2: —';
-           document.getElementById('g3Pill').textContent='G3: —';
-           document.getElementById('seriesPill').textContent='Series: —';}}
-
-document.getElementById('gameNum').addEventListener('change', clearFrames);
-document.getElementById('date').addEventListener('change', e=>{clearFrames(); refreshPillsFor(e.target.value);});
-document.getElementById('newNight').onclick=()=>{const t=new Date().toISOString().slice(0,10);
-  document.getElementById('date').value=t; document.getElementById('gameNum').value='1'; clearFrames(); refreshPillsFor(t);};
-document.getElementById('clearNight').onclick=()=>{
-  const d=document.getElementById('date').value||new Date().toISOString().slice(0,10);
-  if(!confirm(`Delete saved scores for ${d}? (Device only)`)) return;
-  const s=loadState(); s.nights=s.nights.filter(r=>r.date!==d); saveState(s); clearFrames(); refreshPillsFor(d); alert('Night cleared.');
-};
-document.getElementById('saveGame').onclick=()=>{
-  const date=document.getElementById('date').value||new Date().toISOString().slice(0,10);
-  const gnum=document.getElementById('gameNum').value; const total=scoreGame();
-  const notes=document.getElementById('notes').value.trim(); upsertNight(date,gnum,total,notes);
-  alert(`Saved ${date} • Game ${gnum}: ${total}`);
-  if(gnum==='1'||gnum==='2'){document.getElementById('gameNum').value=String(Number(gnum)+1); clearFrames();}
-  refreshPillsFor(date);
-};
-document.getElementById('resetGame').onclick=clearFrames;
-
-/* quick notes */
-document.getElementById('saveQuickNotes').onclick=()=>{
-  localStorage.setItem('bowling.quicknotes',document.getElementById('qNotes').value);
-  const el=document.getElementById('quickSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
-};
-document.getElementById('qNotes').value=localStorage.getItem('bowling.quicknotes')||'';
-
 /* history actions */
-document.querySelector('#histTable').onclick=e=>{
+document.querySelector('#histTable').onclick = e=>{
   const btn=e.target.closest('button[data-copy]'); if(!btn) return;
-  navigator.clipboard.writeText(btn.dataset.copy).then(()=>btn.textContent='Copied ✓');
+  navigator.clipboard.writeText(btn.dataset.copy).then(()=> btn.textContent='Copied ✓');
 };
 document.getElementById('saveSeasonStart').onclick=()=>{
-  const s=loadState(); const v=document.getElementById('seasonStart').value; if(v){s.seasonStart=v; saveState(s);}
+  const s=loadState();
+  const val=document.getElementById('seasonStart').value;
+  if(val){ s.seasonStart=val; saveState(s); renderHistory(); renderAnalytics(); }
 };
 document.getElementById('exportCSV').onclick=()=>{
-  const s=loadState(); const header='Week,Date,G1,G2,G3,High,Low,Series\n';
-  const body=[...s.nights].sort((a,b)=>a.date<b.date?-1:1).map(r=>{
-    const wk=weekNumberFor(r.date,s.seasonStart);
-    return [wk,r.date,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0].join(',');
-  }).join('\n');
+  const s=loadState(); const header='Week,Date,G1,G2,G3,High,Low,Series,HCP/Game,Series+HCP\n';
+  const body=s.nights
+    .sort((a,b)=>a.date<b.date?-1:1)
+    .map(r=>{
+      const wk=weekNumberFor(r.date,s.seasonStart);
+      const hcp=hcpPerGameAt(r.date);
+      const serHcp=(r.series||0)+hcp*((r.g1?1:0)+(r.g2?1:0)+(r.g3?1:0));
+      return [wk,r.date,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0,hcp,serHcp].join(',');
+    }).join('\n');
   const blob=new Blob([header+body],{type:'text/csv'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download='bowling-history.csv'; a.click();
 };
@@ -393,18 +677,171 @@ document.getElementById('importCSV').onchange=async(e)=>{
   const s=loadState();
   for(const ln of lines){ if(!ln.trim()) continue; const c=ln.split(',');
     const date=c[iDate]?.trim(); if(!date) continue;
-    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{}}; s.nights.push(r);}
+    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{},meta:{}}; s.nights.push(r);}
     if(iG1>-1) r.g1=+c[iG1]||0; if(iG2>-1) r.g2=+c[iG2]||0; if(iG3>-1) r.g3=+c[iG3]||0;
     r.high=(iHigh>-1)?(+c[iHigh]||Math.max(r.g1,r.g2,r.g3)):Math.max(r.g1,r.g2,r.g3);
-    r.low=(iLow>-1)?(+c[iLow]||Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0))):Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
+    r.low =(iLow>-1)?(+c[iLow] ||Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0))) :Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
     r.series=(iSeries>-1)?(+c[iSeries]||(r.g1+r.g2+r.g3)):(r.g1+r.g2+r.g3);
+    if(!r.meta) r.meta={};
   }
-  if(!s.seasonStart && s.nights.length){s.seasonStart=s.nights.map(n=>n.date).sort()[0];}
-  saveState(s);
+  saveState(s); renderHistory(); renderAnalytics();
 };
 
-/* init */
-document.getElementById('date').value=new Date().toISOString().slice(0,10);
+/* ---------- analytics ---------- */
+function renderAnalytics(){
+  // Totals
+  const s=loadState();
+  let strikes=0, spares=0, opens=0, games=0, pins=0;
+  const ballAgg = {}; // name -> {type:'Strike'|'Spare', games, strikes, spares, opens}
+
+  s.nights.forEach(n=>{
+    ['g1','g2','g3'].forEach(gk=>{
+      const g = n[gk];
+      if(g){ games++; pins+=g; }
+      const meta = n.meta?.[gk];
+      if(meta){
+        strikes += meta.strikes||0;
+        spares  += meta.spares||0;
+        opens   += meta.opens||0;
+        if(meta.strikeBall){
+          const name=meta.strikeBall; ballAgg[name]=ballAgg[name]||{type:'Strike',games:0,strikes:0,spares:0,opens:0};
+          ballAgg[name].games += g?1:0;
+          ballAgg[name].strikes += meta.strikes||0;
+          ballAgg[name].spares  += meta.spares||0;
+          ballAgg[name].opens   += meta.opens||0;
+        }
+        if(meta.spareBall){
+          const name=meta.spareBall; ballAgg[name]=ballAgg[name]||{type:'Spare',games:0,strikes:0,spares:0,opens:0};
+          ballAgg[name].games += g?1:0;
+          // Attribute spares to spare ball; do not double count strikes/opens here
+          ballAgg[name].spares += meta.spares||0;
+        }
+      }
+    });
+  });
+
+  const avg = games ? (pins/games) : 0;
+  const base = getProfile().handicap.base;
+  const pct  = getProfile().handicap.percent;
+  const hcpNow = Math.max(0, Math.round((base - avg) * (pct/100)));
+
+  const tbar=document.getElementById('totalsBar');
+  tbar.innerHTML = '';
+  const mkStat = (label,val)=> {
+    const d=document.createElement('div');
+    d.className='statCard';
+    d.innerHTML=`<div class="statBig">${val}</div><div class="hint">${label}</div>`;
+    return d;
+  };
+  tbar.append(
+    mkStat('Games', games),
+    mkStat('Series Pins', pins),
+    mkStat('Scratch Avg', avg?avg.toFixed(2):'—'),
+    mkStat('Strikes', strikes),
+    mkStat('Spares', spares),
+    mkStat('Opens', opens),
+    mkStat(`HCP/Game (Base ${base}, ${pct}%)`, hcpNow)
+  );
+
+  // By ball table
+  const tb=document.querySelector('#ballBreakdown tbody');
+  const rows = Object.entries(ballAgg).map(([name,obj])=>{
+    return `<tr><td>${name}</td><td>${obj.type}</td><td>${obj.games}</td><td>${obj.strikes}</td><td>${obj.spares}</td><td>${obj.opens}</td></tr>`;
+  }).join('');
+  tb.innerHTML = rows || `<tr><td colspan="6" class="hint">Add equipment in Profile and save games with ball selections.</td></tr>`;
+
+  // Handicap calc fields
+  document.getElementById('curAvg').value = avg?avg.toFixed(2):'0.00';
+  document.getElementById('hcpBase').value = base;
+  document.getElementById('hcpPct').value  = pct;
+}
+renderAnalytics();
+
+document.getElementById('saveHcp').onclick=()=>{
+  const p=getProfile();
+  p.handicap.base = Number(document.getElementById('hcpBase').value)||210;
+  p.handicap.percent = Number(document.getElementById('hcpPct').value)||90;
+  setProfile(p);
+  renderHistory(); renderAnalytics();
+  const el=document.getElementById('hcpSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
+};
+
+/* ---------- entry actions ---------- */
+function clearFrames(){
+  document.querySelectorAll('#framesRow .shot').forEach(i=>i.value='');
+  document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
+  renderFrameTotals();
+}
+function updatePills(date){
+  const row=getNights().find(r=>r.date===date);
+  document.getElementById('g1Pill').textContent='G1: ' + (row?.g1 ?? '—');
+  document.getElementById('g2Pill').textContent='G2: ' + (row?.g2 ?? '—');
+  document.getElementById('g3Pill').textContent='G3: ' + (row?.g3 ?? '—');
+  document.getElementById('seriesPill').textContent='Series: ' + (row?.series ?? '—');
+}
+function refreshPillsFor(dateStr){
+  updatePills(dateStr);
+  const row = getNights().find(r=>r.date===dateStr);
+  if (!row) {
+    document.getElementById('g1Pill').textContent = 'G1: —';
+    document.getElementById('g2Pill').textContent = 'G2: —';
+    document.getElementById('g3Pill').textContent = 'G3: —';
+    document.getElementById('seriesPill').textContent = 'Series: —';
+  }
+}
+
+document.getElementById('gameNum').addEventListener('change', clearFrames);
+document.getElementById('date').addEventListener('change', (e)=>{ clearFrames(); refreshPillsFor(e.target.value); });
+
+document.getElementById('newNight').onclick = ()=>{
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('date').value = today;
+  document.getElementById('gameNum').value = '1';
+  clearFrames(); refreshPillsFor(today);
+  // prefill entry location from profile
+  const p=getProfile(); document.getElementById('entryAlley').value=p.location.alley||''; document.getElementById('entryLanes').value=p.location.lanes||'';
+  refreshEquipmentSelects();
+};
+
+document.getElementById('clearNight').onclick = ()=>{
+  const d = document.getElementById('date').value || new Date().toISOString().slice(0,10);
+  if (!confirm(`Delete saved scores for ${d}? (Device only)`)) return;
+  const all = getNights().filter(r => r.date !== d);
+  saveNights(all); clearFrames(); refreshPillsFor(d);
+  renderHistory(); renderAnalytics();
+  alert('Night cleared.');
+};
+
+document.getElementById('saveGame').onclick = () => {
+  const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
+  const gnum = document.getElementById('gameNum').value;
+  const total = scoreGame();
+  const notes = document.getElementById('notes').value.trim();
+  const strikeBall = document.getElementById('entryStrikeBall').value || '';
+  const spareBall  = document.getElementById('entrySpareBall').value || '';
+  const sts = calcStats();
+  upsertNight(date, gnum, total, notes, { ...sts, strikeBall, spareBall });
+  alert(`Saved ${date} • Game ${gnum}: ${total}\nStrikes: ${sts.strikes} • Spares: ${sts.spares} • Opens: ${sts.opens}`);
+  if (gnum === '1' || gnum === '2') {
+    document.getElementById('gameNum').value = String(Number(gnum) + 1);
+    clearFrames();
+  }
+  refreshPillsFor(date);
+};
+document.getElementById('resetGame').onclick = clearFrames;
+
+/* quick notes */
+document.getElementById('saveQuickNotes').onclick = ()=>{
+  localStorage.setItem('bowling.quicknotes', document.getElementById('qNotes').value);
+  const el=document.getElementById('quickSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
+};
+document.getElementById('qNotes').value = localStorage.getItem('bowling.quicknotes')||'';
+
+/* init defaults */
+document.getElementById('date').value = new Date().toISOString().slice(0,10);
+refreshEquipmentSelects();
+renderAnalytics();
+renderHistory();
 </script>
 </body>
 </html>
