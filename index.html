@@ -89,6 +89,33 @@
 
   .statCard{background:#0b0e13;border:1px solid #2a3140;border-radius:12px;padding:12px;min-width:160px}
   .statBig{font-weight:900;font-size:22px}
+
+  /* ===== Mini Calendar (popup) ===== */
+  .date-field{position:relative}
+  .calendar-pop{
+    position:absolute; z-index:9999; top:100%; left:0;
+    margin-top:6px; width:280px;
+    background:#0b0e13; border:1px solid #2a3140; border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5); padding:8px; display:none;
+  }
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .cal-head button{background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;border-radius:8px;padding:6px 8px;cursor:pointer}
+  .cal-title{font-weight:700;color:#cfe0fb}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-grid .dow{font-size:12px;color:#9fb2cc;text-align:center;padding:4px 0}
+  .cal-grid button{
+    background:#111623;border:1px solid #2a3140;color:#e7ecf3;border-radius:8px;
+    padding:8px 0; cursor:pointer;
+  }
+  .cal-grid button:hover{outline:2px solid #2c84ff}
+  .cal-grid button.is-today{border-color:#2c84ff}
+  .cal-grid button.is-out{opacity:.45}
+  .cal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+  .cal-actions .btn{padding:8px 10px;border-radius:8px}
+  .date-open{
+    position:absolute; right:8px; top:32px;
+    background:transparent;border:0;color:#9fb2cc;cursor:pointer;font-size:18px;line-height:1;
+  }
 </style>
 </head>
 <body>
@@ -132,10 +159,28 @@
       <h2>Score Entry (X, /, -, 0–9) — Auto-scoring</h2>
 
       <div class="row">
-        <div class="col">
+        <div class="col date-field">
           <label for="date">Date</label>
-          <input id="date" type="date">
+          <input id="date" type="date" autocomplete="off">
+          <button id="openCal" class="date-open" type="button" aria-label="Open calendar">📅</button>
+
+          <!-- Calendar popup -->
+          <div id="datePicker" class="calendar-pop" role="dialog" aria-modal="true" aria-label="Choose date">
+            <div class="cal-head">
+              <button type="button" id="calPrev">‹</button>
+              <div class="cal-title" id="calTitle">Month YYYY</div>
+              <button type="button" id="calNext">›</button>
+            </div>
+            <div class="cal-grid" id="calGrid">
+              <!-- days injected -->
+            </div>
+            <div class="cal-actions">
+              <button type="button" class="btn ghost" id="calToday">Today</button>
+              <button type="button" class="btn" id="calClose">Close</button>
+            </div>
+          </div>
         </div>
+
         <div class="col">
           <label for="gameNum">Game</label>
           <select id="gameNum">
@@ -357,7 +402,7 @@ function buildFrames(){
 buildFrames();
 
 /* ---------- state & profile ---------- */
-const LSKEY='bowling.tracker.v3'; // bumped to v3 for profile/equipment
+const LSKEY='bowling.tracker.v3'; // profile/equipment-enabled
 function defaultState(){
   return {
     seasonStart:new Date().toISOString().slice(0,10),
@@ -367,13 +412,11 @@ function defaultState(){
       location:{alley:'', lanes:''},
       handicap:{base:210, percent:90}
     },
-    nights:[] // [{date,g1,g2,g3,series,high,low, notes:{g1:'',...}, meta:{g1:{strikes,spares,opens, strikeBall, spareBall},...}}]
+    nights:[]
   };
 }
 function loadState(){const raw=localStorage.getItem(LSKEY); return raw?JSON.parse(raw):defaultState();}
 function saveState(s){localStorage.setItem(LSKEY,JSON.stringify(s));}
-
-/* helpers */
 function getProfile(){ return loadState().profile; }
 function setProfile(p){ const s=loadState(); s.profile=p; saveState(s); }
 
@@ -402,7 +445,7 @@ function refreshEquipmentSelects(){
   spSel.innerHTML=mkOptions(p.equipment.spareBalls);
 }
 
-/* ---------- profile form load/save ---------- */
+/* ---------- profile load/save ---------- */
 function loadProfileToForm(){
   const p=getProfile();
   // player
@@ -501,7 +544,6 @@ function readFrameSyms(f){
 }
 
 function calcStats(){
-  // counts frames: strikes (# of X), spares (# of /), opens (frames with <10 after two balls for frames 1-9, or 10th first two <10)
   let strikes=0, spares=0, opens=0;
   for(let f=1; f<=10; f++){
     const [r1,r2,r3]=readFrameSyms(f);
@@ -511,7 +553,6 @@ function calcStats(){
       if(r2==='/'){ spares+=1; }
       else if(frame<10){ opens+=1; }
     }else{
-      // 10th: count Xs anywhere; count '/' on r2 or r3; open if first two balls < 10 and not strike
       if(r1==='X') strikes++;
       if(r2==='X') strikes++;
       if(r3==='X') strikes++;
@@ -689,10 +730,9 @@ document.getElementById('importCSV').onchange=async(e)=>{
 
 /* ---------- analytics ---------- */
 function renderAnalytics(){
-  // Totals
   const s=loadState();
   let strikes=0, spares=0, opens=0, games=0, pins=0;
-  const ballAgg = {}; // name -> {type:'Strike'|'Spare', games, strikes, spares, opens}
+  const ballAgg = {};
 
   s.nights.forEach(n=>{
     ['g1','g2','g3'].forEach(gk=>{
@@ -713,7 +753,6 @@ function renderAnalytics(){
         if(meta.spareBall){
           const name=meta.spareBall; ballAgg[name]=ballAgg[name]||{type:'Spare',games:0,strikes:0,spares:0,opens:0};
           ballAgg[name].games += g?1:0;
-          // Attribute spares to spare ball; do not double count strikes/opens here
           ballAgg[name].spares += meta.spares||0;
         }
       }
@@ -743,14 +782,12 @@ function renderAnalytics(){
     mkStat(`HCP/Game (Base ${base}, ${pct}%)`, hcpNow)
   );
 
-  // By ball table
   const tb=document.querySelector('#ballBreakdown tbody');
   const rows = Object.entries(ballAgg).map(([name,obj])=>{
     return `<tr><td>${name}</td><td>${obj.type}</td><td>${obj.games}</td><td>${obj.strikes}</td><td>${obj.spares}</td><td>${obj.opens}</td></tr>`;
   }).join('');
   tb.innerHTML = rows || `<tr><td colspan="6" class="hint">Add equipment in Profile and save games with ball selections.</td></tr>`;
 
-  // Handicap calc fields
   document.getElementById('curAvg').value = avg?avg.toFixed(2):'0.00';
   document.getElementById('hcpBase').value = base;
   document.getElementById('hcpPct').value  = pct;
@@ -798,7 +835,6 @@ document.getElementById('newNight').onclick = ()=>{
   document.getElementById('date').value = today;
   document.getElementById('gameNum').value = '1';
   clearFrames(); refreshPillsFor(today);
-  // prefill entry location from profile
   const p=getProfile(); document.getElementById('entryAlley').value=p.location.alley||''; document.getElementById('entryLanes').value=p.location.lanes||'';
   refreshEquipmentSelects();
 };
@@ -836,6 +872,91 @@ document.getElementById('saveQuickNotes').onclick = ()=>{
   const el=document.getElementById('quickSaved'); el.textContent='Saved ✔'; setTimeout(()=>el.textContent='',1500);
 };
 document.getElementById('qNotes').value = localStorage.getItem('bowling.quicknotes')||'';
+
+/* ---------- Popup Calendar logic ---------- */
+const cal = {
+  openBtn: document.getElementById('openCal'),
+  pop: document.getElementById('datePicker'),
+  grid: document.getElementById('calGrid'),
+  title: document.getElementById('calTitle'),
+  prev: document.getElementById('calPrev'),
+  next: document.getElementById('calNext'),
+  todayBtn: document.getElementById('calToday'),
+  closeBtn: document.getElementById('calClose'),
+  input: document.getElementById('date'),
+  view: new Date()
+};
+
+function ymd(d){
+  const z=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
+
+function fromYMD(s){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if(!m) return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+}
+
+function renderCalendar(){
+  const year = cal.view.getFullYear();
+  const month = cal.view.getMonth();
+  const first = new Date(year, month, 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - ((first.getDay()+6)%7)); // Monday-based grid
+
+  const monthName = first.toLocaleString(undefined, {month:'long'});
+  cal.title.textContent = `${monthName} ${year}`;
+
+  cal.grid.innerHTML = '';
+
+  // DOW header
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{
+    const e=document.createElement('div'); e.className='dow'; e.textContent=d; cal.grid.appendChild(e);
+  });
+
+  const todayStr = ymd(new Date());
+  const selStr = cal.input.value || todayStr;
+
+  for(let i=0;i<42;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const btn = document.createElement('button');
+    btn.type='button';
+    btn.textContent = d.getDate();
+    const thisStr = ymd(d);
+    if(d.getMonth()!==month) btn.classList.add('is-out');
+    if(thisStr===todayStr) btn.classList.add('is-today');
+    btn.onclick = ()=>{
+      cal.input.value = thisStr;
+      cal.input.dispatchEvent(new Event('change', {bubbles:true}));
+      hideCalendar();
+    };
+    cal.grid.appendChild(btn);
+  }
+}
+
+function showCalendar(){
+  // position beneath the input
+  cal.pop.style.display='block';
+  renderCalendar();
+  document.addEventListener('click', clickAway);
+}
+function hideCalendar(){
+  cal.pop.style.display='none';
+  document.removeEventListener('click', clickAway);
+}
+function clickAway(e){
+  if(!cal.pop.contains(e.target) && e.target!==cal.input && e.target!==cal.openBtn){
+    hideCalendar();
+  }
+}
+
+cal.openBtn.addEventListener('click', (e)=>{ e.stopPropagation(); showCalendar(); });
+cal.input.addEventListener('focus', showCalendar);
+cal.prev.addEventListener('click', ()=>{ cal.view.setMonth(cal.view.getMonth()-1); renderCalendar(); });
+cal.next.addEventListener('click', ()=>{ cal.view.setMonth(cal.view.getMonth()+1); renderCalendar(); });
+cal.todayBtn.addEventListener('click', ()=>{ const t=new Date(); cal.view=new Date(t.getFullYear(),t.getMonth(),1); cal.input.value=ymd(t); cal.input.dispatchEvent(new Event('change',{bubbles:true})); hideCalendar(); });
+cal.closeBtn.addEventListener('click', hideCalendar);
 
 /* init defaults */
 document.getElementById('date').value = new Date().toISOString().slice(0,10);
