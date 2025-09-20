@@ -10,7 +10,9 @@
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; background:#000; color:#e7ecf3;
+    margin:0;
+    background:#000;                 /* page background */
+    color:#e7ecf3;                   /* default text */
     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   }
   .wrap{max-width:1100px;margin:0 auto;padding:20px}
@@ -30,7 +32,6 @@
   input,select,textarea{
     width:100%;background:#0b0e13;border:1px solid #2a3140;border-radius:10px;color:#e7ecf3;padding:10px
   }
-  select.sm, input.sm{padding:6px 8px;font-size:12px;border-radius:8px}
   .btn{display:inline-block;background:#2c84ff;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
   .btn.ghost{background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b0e13;border:1px solid #2a3140;color:#cfe0fb;font-size:12px}
@@ -47,7 +48,7 @@
   #framesRow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
   @media (min-width:900px){#framesRow{grid-template-columns:repeat(10,1fr)}}
 
-  .frameCard{background:#0b0e13;border:1px solid #2a3140;border-radius:10px;padding:8px;position:relative;min-height:136px}
+  .frameCard{background:#0b0e13;border:1px solid #2a3140;border-radius:10px;padding:8px;position:relative;min-height:110px}
   .frameHead{display:flex;justify-content:space-between;align-items:flex-start}
   .frameNum{font-weight:800;color:#cfe0fb}
 
@@ -60,8 +61,10 @@
     font:900 18px/28px system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     text-transform:uppercase; font-variant-numeric:tabular-nums;
     background:#0f1624; border:1px solid #3b4660; border-radius:4px;
-    color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;
-    caret-color:#2c84ff; appearance:none;
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+    caret-color:#2c84ff;
+    appearance:none;
   }
   .shot:focus{outline:2px solid #2c84ff}
   .shot[disabled]{opacity:.45}
@@ -72,11 +75,6 @@
             box-shadow:0 0 0 1000px #0f1624 inset !important;
     transition: background-color 86400s;
   }
-
-  /* per-frame ball selects */
-  .ballRow{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
-  .ballRow label{font-size:11px;color:#9fb2cc;margin-bottom:2px}
-  .ballRow .grp{display:flex;flex-direction:column}
 
   .frameTotal{
     position:absolute;left:8px;right:8px;bottom:8px;height:34px;
@@ -91,17 +89,6 @@
 
   .statCard{background:#0b0e13;border:1px solid #2a3140;border-radius:12px;padding:12px;min-width:160px}
   .statBig{font-weight:900;font-size:22px}
-
-  /* mini calendar */
-  .miniCal{background:#0b0e13;border:1px solid #2a3140;border-radius:12px;padding:10px}
-  .miniCal .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-  .miniCal .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-  .miniCal .cell{padding:8px 0;text-align:center;border-radius:8px}
-  .miniCal .dow{color:#9fb2cc;font-size:12px}
-  .miniCal .day{cursor:pointer;background:#0f1624;border:1px solid #2a3140}
-  .miniCal .day:hover{outline:2px solid #2c84ff}
-  .miniCal .today{border-color:#2c84ff}
-  .miniCal .sel{background:#2c84ff;color:#fff}
 </style>
 </head>
 <body>
@@ -136,10 +123,6 @@
             <button class="btn" id="saveQuickNotes">Save Notes</button>
             <span class="hint" id="quickSaved"></span>
           </div>
-
-          <h2 style="margin-top:12px">Pick Night (Calendar)</h2>
-          <div id="miniCal" class="miniCal"></div>
-          <p class="foot">Selecting a day sets the **Date** on the Entry tab.</p>
         </div>
       </div>
     </section>
@@ -179,30 +162,14 @@
         </div>
       </div>
 
-      <!-- LANE PAIR -->
       <div class="row">
         <div class="col">
           <label>Alley</label>
           <input id="entryAlley" placeholder="(from Profile)">
         </div>
         <div class="col">
-          <label>Lane Pair</label>
-          <div class="flex">
-            <input class="sm" id="entryLaneA" inputmode="numeric" placeholder="Lane A">
-            <span>—</span>
-            <input class="sm" id="entryLaneB" inputmode="numeric" placeholder="Lane B">
-          </div>
-        </div>
-        <div class="col">
-          <label>Start on</label>
-          <select id="entryStart" class="sm">
-            <option value="A">Lane A</option>
-            <option value="B">Lane B</option>
-          </select>
-        </div>
-        <div class="col">
-          <label>Starting lane (this game)</label>
-          <div class="pill" id="startLanePill">—</div>
+          <label># Lanes</label>
+          <input id="entryLanes" inputmode="numeric" placeholder="(from Profile)">
         </div>
       </div>
 
@@ -244,7 +211,6 @@
         <thead>
           <tr>
             <th>Week</th><th>Date</th>
-            <th>Lane Pair</th><th>Start G1</th>
             <th>G1</th><th>G2</th><th>G3</th>
             <th>High</th><th>Low</th><th>Series</th>
             <th>HCP/Game</th><th>Series+HCP</th>
@@ -260,13 +226,17 @@
         <button class="btn ghost" id="importBtn">Import CSV</button>
         <button class="btn" id="clearAll">Clear All (device)</button>
       </div>
+
+      <p class="foot">“Copy” puts a tab-separated row on your clipboard to paste into your **Main** Google Sheet tab.</p>
     </section>
 
     <!-- ANALYTICS -->
     <section id="analytics" class="panel" style="display:none">
       <h2>Analytics</h2>
 
-      <div class="flex" id="totalsBar"></div>
+      <div class="flex" id="totalsBar">
+        <!-- stat cards injected -->
+      </div>
 
       <h2 style="margin-top:14px">By Ball</h2>
       <table id="ballBreakdown">
@@ -316,16 +286,28 @@
 
       <h2 style="margin-top:14px">Equipment</h2>
       <div class="row">
-        <div class="col"><label>Strike Ball — Make</label><input id="sbMake"></div>
-        <div class="col"><label>Strike Ball — Model</label><input id="sbModel"></div>
-        <div class="col" style="display:flex;align-items:flex-end"><button class="btn" id="addStrikeBall">Add Strike Ball</button></div>
+        <div class="col">
+          <label>Strike Ball — Make</label><input id="sbMake">
+        </div>
+        <div class="col">
+          <label>Strike Ball — Model</label><input id="sbModel">
+        </div>
+        <div class="col" style="display:flex;align-items:flex-end">
+          <button class="btn" id="addStrikeBall">Add Strike Ball</button>
+        </div>
       </div>
       <div id="strikeList" class="flex"></div>
 
       <div class="row" style="margin-top:8px">
-        <div class="col"><label>Spare Ball — Make</label><input id="spbMake"></div>
-        <div class="col"><label>Spare Ball — Model</label><input id="spbModel"></div>
-        <div class="col" style="display:flex;align-items:flex-end"><button class="btn" id="addSpareBall">Add Spare Ball</button></div>
+        <div class="col">
+          <label>Spare Ball — Make</label><input id="spbMake">
+        </div>
+        <div class="col">
+          <label>Spare Ball — Model</label><input id="spbModel">
+        </div>
+        <div class="col" style="display:flex;align-items:flex-end">
+          <button class="btn" id="addSpareBall">Add Spare Ball</button>
+        </div>
       </div>
       <div id="spareList" class="flex"></div>
 
@@ -368,25 +350,14 @@ function buildFrames(){
           <input class="shot" data-f="${f}" data-r="3" maxlength="1" ${triple?'':'disabled'} autocomplete="off" autocapitalize="characters" spellcheck="false">
         </div>
       </div>
-      <div class="ballRow">
-        <div class="grp">
-          <label>SB</label>
-          <select class="sm frameSB" data-f="${f}"></select>
-        </div>
-        <div class="grp">
-          <label>SP</label>
-          <select class="sm frameSP" data-f="${f}"></select>
-        </div>
-      </div>
       <div class="frameTotal" data-ft="${f}"></div>`;
     framesRow.appendChild(el);
   }
-  refreshPerFrameBallOptions();
 }
 buildFrames();
 
 /* ---------- state & profile ---------- */
-const LSKEY='bowling.tracker.v4'; // v4: lanes + per-frame ball overrides + calendar
+const LSKEY='bowling.tracker.v3'; // bumped to v3 for profile/equipment
 function defaultState(){
   return {
     seasonStart:new Date().toISOString().slice(0,10),
@@ -396,7 +367,7 @@ function defaultState(){
       location:{alley:'', lanes:''},
       handicap:{base:210, percent:90}
     },
-    nights:[] // [{date,g1,g2,g3,series,high,low,notes:{}, lanes:{a,b,start:'A'|'B'}, meta:{g1:{...},...}, frameBalls:{g1:{1:{sb,sp},...}}]
+    nights:[] // [{date,g1,g2,g3,series,high,low, notes:{g1:'',...}, meta:{g1:{strikes,spares,opens, strikeBall, spareBall},...}}]
   };
 }
 function loadState(){const raw=localStorage.getItem(LSKEY); return raw?JSON.parse(raw):defaultState();}
@@ -422,27 +393,25 @@ function renderChips(){
     spareList.appendChild(div);
   });
 }
-function optionize(arr){ return ['<option value="">(default)</option>'].concat(arr.map(b=>`<option>${b.make} — ${b.model}</option>`)).join(''); }
 function refreshEquipmentSelects(){
   const p=getProfile();
-  document.getElementById('entryStrikeBall').innerHTML = ['<option value="">(select)</option>'].concat(p.equipment.strikeBalls.map(b=>`<option>${b.make} — ${b.model}</option>`)).join('');
-  document.getElementById('entrySpareBall').innerHTML  = ['<option value="">(select)</option>'].concat(p.equipment.spareBalls.map(b=>`<option>${b.make} — ${b.model}</option>`)).join('');
-  refreshPerFrameBallOptions();
-}
-function refreshPerFrameBallOptions(){
-  const p=getProfile();
-  document.querySelectorAll('.frameSB').forEach(sel=> sel.innerHTML = optionize(p.equipment.strikeBalls));
-  document.querySelectorAll('.frameSP').forEach(sel=> sel.innerHTML = optionize(p.equipment.spareBalls));
+  const sbSel=document.getElementById('entryStrikeBall');
+  const spSel=document.getElementById('entrySpareBall');
+  const mkOptions=(arr)=>['<option value="">(select)</option>'].concat(arr.map(b=>`<option>${b.make} — ${b.model}</option>`)).join('');
+  sbSel.innerHTML=mkOptions(p.equipment.strikeBalls);
+  spSel.innerHTML=mkOptions(p.equipment.spareBalls);
 }
 
 /* ---------- profile form load/save ---------- */
 function loadProfileToForm(){
   const p=getProfile();
   // player
-  ['pFirst','pLast','pEmail','pPhone','pYears','pStartHcp'].forEach(id=>{
-    const key = {pFirst:'first',pLast:'last',pEmail:'email',pPhone:'phone',pYears:'years',pStartHcp:'startHcp'}[id];
-    document.getElementById(id).value = p.player[key]||'';
-  });
+  document.getElementById('pFirst').value=p.player.first||'';
+  document.getElementById('pLast').value=p.player.last||'';
+  document.getElementById('pEmail').value=p.player.email||'';
+  document.getElementById('pPhone').value=p.player.phone||'';
+  document.getElementById('pYears').value=p.player.years||'';
+  document.getElementById('pStartHcp').value=p.player.startHcp||'';
   // handicap
   document.getElementById('pHcpBase').value=p.handicap.base;
   document.getElementById('pHcpPct').value=p.handicap.percent;
@@ -454,6 +423,7 @@ function loadProfileToForm(){
   refreshEquipmentSelects();
   // entry prefill for location
   document.getElementById('entryAlley').value=p.location.alley||'';
+  document.getElementById('entryLanes').value=p.location.lanes||'';
   // analytics HCP inputs
   document.getElementById('hcpBase').value=p.handicap.base;
   document.getElementById('hcpPct').value=p.handicap.percent;
@@ -531,6 +501,7 @@ function readFrameSyms(f){
 }
 
 function calcStats(){
+  // counts frames: strikes (# of X), spares (# of /), opens (frames with <10 after two balls for frames 1-9, or 10th first two <10)
   let strikes=0, spares=0, opens=0;
   for(let f=1; f<=10; f++){
     const [r1,r2,r3]=readFrameSyms(f);
@@ -540,6 +511,7 @@ function calcStats(){
       if(r2==='/'){ spares+=1; }
       else if(frame<10){ opens+=1; }
     }else{
+      // 10th: count Xs anywhere; count '/' on r2 or r3; open if first two balls < 10 and not strike
       if(r1==='X') strikes++;
       if(r2==='X') strikes++;
       if(r3==='X') strikes++;
@@ -628,35 +600,13 @@ function hcpPerGameAt(dateStr){
   return h;
 }
 
-/* per-frame overrides helpers */
-function collectFrameOverrides(){
-  const fbs={}; // { 1:{sb,sp}, ... } with empty strings filtered later
-  document.querySelectorAll('.frameSB').forEach(sel=>{
-    const f=+sel.dataset.f; fbs[f]=fbs[f]||{};
-    fbs[f].sb = sel.value || '';
-  });
-  document.querySelectorAll('.frameSP').forEach(sel=>{
-    const f=+sel.dataset.f; fbs[f]=fbs[f]||{};
-    fbs[f].sp = sel.value || '';
-  });
-  return fbs;
-}
-function ballForFrame(frame, kind, gameSB, gameSP, frameMap){
-  const fb = frameMap?.[frame];
-  if(kind==='strike') return (fb?.sb)||gameSB||'';
-  if(kind==='spare')  return (fb?.sp)||gameSP||'';
-  return '';
-}
-
-function upsertNight(date,gnum,total,notes, meta, lanes, frameMap){
+function upsertNight(date,gnum,total,notes, meta){
   const s=loadState();
   let row=s.nights.find(r=>r.date===date);
-  if(!row){ row={date,g1:null,g2:null,g3:null,notes:{},series:0,high:0,low:0, meta:{}, lanes:null, frameBalls:{}}; s.nights.push(row); }
+  if(!row){ row={date,g1:null,g2:null,g3:null,notes:{},series:0,high:0,low:0, meta:{}}; s.nights.push(row); }
   row['g'+gnum]=total;
   row.notes['g'+gnum]=notes||'';
   row.meta['g'+gnum] = meta || {};
-  if(lanes) row.lanes = lanes;  // store once per night
-  if(frameMap) { row.frameBalls['g'+gnum] = frameMap; }
   const nums=[row.g1||0,row.g2||0,row.g3||0];
   row.series=nums.reduce((a,b)=>a+b,0);
   row.high=Math.max(...nums);
@@ -677,15 +627,10 @@ function renderHistory(){
   tb.innerHTML = rows.map(r=>{
     const wk=weekNumberFor(r.date,s.seasonStart);
     const hcp = hcpPerGameAt(r.date);
-    const gamesCount = (r.g1?1:0)+(r.g2?1:0)+(r.g3?1:0);
-    const serHcp = (r.series||0) + hcp * gamesCount;
-    const lp = r.lanes ? `${r.lanes.a || '?'}–${r.lanes.b || '?'}` : '—';
-    const st = r.lanes ? (r.lanes.start || 'A') : '—';
+    const serHcp = (r.series||0) + hcp * ( (r.g1?1:0) + (r.g2?1:0) + (r.g3?1:0) );
     return `<tr>
       <td>${wk}</td>
       <td>${r.date}</td>
-      <td>${lp}</td>
-      <td>${st}</td>
       <td>${r.g1??''}</td>
       <td>${r.g2??''}</td>
       <td>${r.g3??''}</td>
@@ -694,7 +639,7 @@ function renderHistory(){
       <td><strong>${r.series??''}</strong></td>
       <td>${hcp}</td>
       <td>${serHcp}</td>
-      <td><button class="btn ghost" data-copy="${wk}\t${r.date}\t${lp}\t${st}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}\t${hcp}\t${serHcp}">Copy</button></td>
+      <td><button class="btn ghost" data-copy="${wk}\t${r.date}\t${r.g1||0}\t${r.g2||0}\t${r.g3||0}\t${r.high||0}\t${r.low||0}\t${r.series||0}\t${hcp}\t${serHcp}">Copy</button></td>
     </tr>`;
   }).join('');
 }
@@ -711,17 +656,14 @@ document.getElementById('saveSeasonStart').onclick=()=>{
   if(val){ s.seasonStart=val; saveState(s); renderHistory(); renderAnalytics(); }
 };
 document.getElementById('exportCSV').onclick=()=>{
-  const s=loadState(); const header='Week,Date,LanePair,StartG1,G1,G2,G3,High,Low,Series,HCP/Game,Series+HCP\n';
+  const s=loadState(); const header='Week,Date,G1,G2,G3,High,Low,Series,HCP/Game,Series+HCP\n';
   const body=s.nights
     .sort((a,b)=>a.date<b.date?-1:1)
     .map(r=>{
       const wk=weekNumberFor(r.date,s.seasonStart);
       const hcp=hcpPerGameAt(r.date);
-      const gamesCount=(r.g1?1:0)+(r.g2?1:0)+(r.g3?1:0);
-      const serHcp=(r.series||0)+hcp*gamesCount;
-      const lp=r.lanes?`${r.lanes.a||'?'}–${r.lanes.b||'?'}`:'—';
-      const st=r.lanes?(r.lanes.start||'A'):'—';
-      return [wk,r.date,lp,st,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0,hcp,serHcp].join(',');
+      const serHcp=(r.series||0)+hcp*((r.g1?1:0)+(r.g2?1:0)+(r.g3?1:0));
+      return [wk,r.date,r.g1||0,r.g2||0,r.g3||0,r.high||0,r.low||0,r.series||0,hcp,serHcp].join(',');
     }).join('\n');
   const blob=new Blob([header+body],{type:'text/csv'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download='bowling-history.csv'; a.click();
@@ -735,46 +677,46 @@ document.getElementById('importCSV').onchange=async(e)=>{
   const s=loadState();
   for(const ln of lines){ if(!ln.trim()) continue; const c=ln.split(',');
     const date=c[iDate]?.trim(); if(!date) continue;
-    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{},meta:{},lanes:null,frameBalls:{}}; s.nights.push(r);}
+    let r=s.nights.find(x=>x.date===date); if(!r){r={date,g1:0,g2:0,g3:0,notes:{},meta:{}}; s.nights.push(r);}
     if(iG1>-1) r.g1=+c[iG1]||0; if(iG2>-1) r.g2=+c[iG2]||0; if(iG3>-1) r.g3=+c[iG3]||0;
     r.high=(iHigh>-1)?(+c[iHigh]||Math.max(r.g1,r.g2,r.g3)):Math.max(r.g1,r.g2,r.g3);
     r.low =(iLow>-1)?(+c[iLow] ||Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0))) :Math.min(...[r.g1,r.g2,r.g3].filter(n=>n>0));
     r.series=(iSeries>-1)?(+c[iSeries]||(r.g1+r.g2+r.g3)):(r.g1+r.g2+r.g3);
-    if(!r.meta) r.meta={}; if(!r.frameBalls) r.frameBalls={};
+    if(!r.meta) r.meta={};
   }
   saveState(s); renderHistory(); renderAnalytics();
 };
 
 /* ---------- analytics ---------- */
 function renderAnalytics(){
+  // Totals
   const s=loadState();
   let strikes=0, spares=0, opens=0, games=0, pins=0;
-  const ballAgg = {}; // name -> {type:'Strike'|'Spare'|'Mixed', games, strikes, spares, opens}
+  const ballAgg = {}; // name -> {type:'Strike'|'Spare', games, strikes, spares, opens}
 
   s.nights.forEach(n=>{
-    ['g1','g2','g3'].forEach((gk,i)=>{
+    ['g1','g2','g3'].forEach(gk=>{
       const g = n[gk];
       if(g){ games++; pins+=g; }
-      const meta = n.meta?.[gk] || {};
-      strikes += meta.strikes||0;
-      spares  += meta.spares||0;
-      opens   += meta.opens||0;
-
-      // attribute to game-level selections as "usage"; frame-level overrides counted too
-      const fbMap = n.frameBalls?.[gk] || {};
-      const usedSet = new Set();
-      Object.values(fbMap).forEach(v=>{ if(v?.sb) usedSet.add(v.sb); if(v?.sp) usedSet.add(v.sp); });
-      if(meta.strikeBall) usedSet.add(meta.strikeBall);
-      if(meta.spareBall)  usedSet.add(meta.spareBall);
-      usedSet.forEach(name=>{
-        if(!name) return;
-        const type = (name === meta.strikeBall) ? 'Strike' : (name === meta.spareBall) ? 'Spare' : 'Mixed';
-        ballAgg[name] = ballAgg[name] || {type,games:0,strikes:0,spares:0,opens:0};
-        ballAgg[name].games += g?1:0;
-        // rough attribution: add strikes/spares/opens proportionally if it matches type; otherwise leave as usage
-        if(type==='Strike') ballAgg[name].strikes += meta.strikes||0;
-        if(type==='Spare')  ballAgg[name].spares  += meta.spares||0;
-      });
+      const meta = n.meta?.[gk];
+      if(meta){
+        strikes += meta.strikes||0;
+        spares  += meta.spares||0;
+        opens   += meta.opens||0;
+        if(meta.strikeBall){
+          const name=meta.strikeBall; ballAgg[name]=ballAgg[name]||{type:'Strike',games:0,strikes:0,spares:0,opens:0};
+          ballAgg[name].games += g?1:0;
+          ballAgg[name].strikes += meta.strikes||0;
+          ballAgg[name].spares  += meta.spares||0;
+          ballAgg[name].opens   += meta.opens||0;
+        }
+        if(meta.spareBall){
+          const name=meta.spareBall; ballAgg[name]=ballAgg[name]||{type:'Spare',games:0,strikes:0,spares:0,opens:0};
+          ballAgg[name].games += g?1:0;
+          // Attribute spares to spare ball; do not double count strikes/opens here
+          ballAgg[name].spares += meta.spares||0;
+        }
+      }
     });
   });
 
@@ -785,13 +727,30 @@ function renderAnalytics(){
 
   const tbar=document.getElementById('totalsBar');
   tbar.innerHTML = '';
-  const mk=(lbl,val)=>{const d=document.createElement('div'); d.className='statCard'; d.innerHTML=`<div class="statBig">${val}</div><div class="hint">${lbl}</div>`; return d;};
-  tbar.append(mk('Games',games),mk('Series Pins',pins),mk('Scratch Avg',avg?avg.toFixed(2):'—'),mk('Strikes',strikes),mk('Spares',spares),mk('Opens',opens),mk(`HCP/Game (Base ${base}, ${pct}%)`,hcpNow));
+  const mkStat = (label,val)=> {
+    const d=document.createElement('div');
+    d.className='statCard';
+    d.innerHTML=`<div class="statBig">${val}</div><div class="hint">${label}</div>`;
+    return d;
+  };
+  tbar.append(
+    mkStat('Games', games),
+    mkStat('Series Pins', pins),
+    mkStat('Scratch Avg', avg?avg.toFixed(2):'—'),
+    mkStat('Strikes', strikes),
+    mkStat('Spares', spares),
+    mkStat('Opens', opens),
+    mkStat(`HCP/Game (Base ${base}, ${pct}%)`, hcpNow)
+  );
 
+  // By ball table
   const tb=document.querySelector('#ballBreakdown tbody');
-  const rows = Object.entries(ballAgg).map(([name,obj])=>`<tr><td>${name}</td><td>${obj.type}</td><td>${obj.games}</td><td>${obj.strikes}</td><td>${obj.spares}</td><td>${obj.opens}</td></tr>`).join('');
-  tb.innerHTML = rows || `<tr><td colspan="6" class="hint">Add equipment in Profile and save games with ball selections or per-frame overrides.</td></tr>`;
+  const rows = Object.entries(ballAgg).map(([name,obj])=>{
+    return `<tr><td>${name}</td><td>${obj.type}</td><td>${obj.games}</td><td>${obj.strikes}</td><td>${obj.spares}</td><td>${obj.opens}</td></tr>`;
+  }).join('');
+  tb.innerHTML = rows || `<tr><td colspan="6" class="hint">Add equipment in Profile and save games with ball selections.</td></tr>`;
 
+  // Handicap calc fields
   document.getElementById('curAvg').value = avg?avg.toFixed(2):'0.00';
   document.getElementById('hcpBase').value = base;
   document.getElementById('hcpPct').value  = pct;
@@ -810,8 +769,6 @@ document.getElementById('saveHcp').onclick=()=>{
 /* ---------- entry actions ---------- */
 function clearFrames(){
   document.querySelectorAll('#framesRow .shot').forEach(i=>i.value='');
-  // reset per-frame selects to (default)
-  document.querySelectorAll('.frameSB,.frameSP').forEach(s=> s.value='');
   document.getElementById('notes').value=''; document.getElementById('gameTotal').textContent='0';
   renderFrameTotals();
 }
@@ -833,22 +790,6 @@ function refreshPillsFor(dateStr){
   }
 }
 
-/* lane logic: auto swap start lane each game */
-function computeStartLaneForGame(g){
-  const startSel=document.getElementById('entryStart').value || 'A';
-  return (Number(g)%2===1) ? startSel : (startSel==='A'?'B':'A');
-}
-function showStartLanePill(){
-  const a=document.getElementById('entryLaneA').value||'?';
-  const b=document.getElementById('entryLaneB').value||'?';
-  const which=computeStartLaneForGame(document.getElementById('gameNum').value);
-  const lane = (which==='A')?a:b;
-  document.getElementById('startLanePill').textContent = lane?`Lane ${lane}`:'—';
-}
-['gameNum','entryStart','entryLaneA','entryLaneB'].forEach(id=>{
-  document.getElementById(id).addEventListener('change', showStartLanePill);
-});
-
 document.getElementById('gameNum').addEventListener('change', clearFrames);
 document.getElementById('date').addEventListener('change', (e)=>{ clearFrames(); refreshPillsFor(e.target.value); });
 
@@ -857,11 +798,9 @@ document.getElementById('newNight').onclick = ()=>{
   document.getElementById('date').value = today;
   document.getElementById('gameNum').value = '1';
   clearFrames(); refreshPillsFor(today);
-  const p=getProfile();
-  document.getElementById('entryAlley').value=p.location.alley||'';
-  // lanes left blank by default each night
+  // prefill entry location from profile
+  const p=getProfile(); document.getElementById('entryAlley').value=p.location.alley||''; document.getElementById('entryLanes').value=p.location.lanes||'';
   refreshEquipmentSelects();
-  showStartLanePill();
 };
 
 document.getElementById('clearNight').onclick = ()=>{
@@ -878,30 +817,14 @@ document.getElementById('saveGame').onclick = () => {
   const gnum = document.getElementById('gameNum').value;
   const total = scoreGame();
   const notes = document.getElementById('notes').value.trim();
-
   const strikeBall = document.getElementById('entryStrikeBall').value || '';
   const spareBall  = document.getElementById('entrySpareBall').value || '';
   const sts = calcStats();
-
-  const lanes = {
-    a: document.getElementById('entryLaneA').value.trim(),
-    b: document.getElementById('entryLaneB').value.trim(),
-    start: document.getElementById('entryStart').value || 'A'
-  };
-  const frameMap = collectFrameOverrides();
-
-  upsertNight(
-    date, gnum, total, notes,
-    { ...sts, strikeBall, spareBall },
-    lanes,
-    frameMap
-  );
-
-  alert(`Saved ${date} • Game ${gnum}: ${total}\nStrikes: ${sts.strikes} • Spares: ${sts.spares} • Opens: ${sts.opens}\nStarting lane: ${computeStartLaneForGame(gnum)}`);
+  upsertNight(date, gnum, total, notes, { ...sts, strikeBall, spareBall });
+  alert(`Saved ${date} • Game ${gnum}: ${total}\nStrikes: ${sts.strikes} • Spares: ${sts.spares} • Opens: ${sts.opens}`);
   if (gnum === '1' || gnum === '2') {
     document.getElementById('gameNum').value = String(Number(gnum) + 1);
     clearFrames();
-    showStartLanePill();
   }
   refreshPillsFor(date);
 };
@@ -914,47 +837,11 @@ document.getElementById('saveQuickNotes').onclick = ()=>{
 };
 document.getElementById('qNotes').value = localStorage.getItem('bowling.quicknotes')||'';
 
-/* ---------- mini calendar ---------- */
-function renderMiniCal(targetId, dateObj=new Date()){
-  const el=document.getElementById(targetId);
-  const y=dateObj.getFullYear(), m=dateObj.getMonth();
-  const first=new Date(y,m,1);
-  const startDay=(first.getDay()+6)%7; // make Monday=0
-  const daysInMonth=new Date(y,m+1,0).getDate();
-  const today=new Date(); const todayStr=today.toISOString().slice(0,10);
-  const selStr=(document.getElementById('date').value)||'';
-
-  el.innerHTML='';
-  const bar=document.createElement('div'); bar.className='bar';
-  const prev=document.createElement('button'); prev.className='btn ghost'; prev.textContent='‹';
-  const next=document.createElement('button'); next.className='btn ghost'; next.textContent='›';
-  const title=document.createElement('div'); title.textContent = new Date(y,m,1).toLocaleString(undefined,{month:'long',year:'numeric'});
-  bar.append(prev,title,next); el.append(bar);
-
-  const grid=document.createElement('div'); grid.className='grid';
-  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{const c=document.createElement('div'); c.className='cell dow'; c.textContent=d; grid.append(c);});
-  for(let i=0;i<startDay;i++){ const c=document.createElement('div'); c.className='cell'; grid.append(c); }
-  for(let d=1; d<=daysInMonth; d++){
-    const c=document.createElement('div'); c.className='cell day';
-    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if(ds===todayStr) c.classList.add('today');
-    if(ds===selStr) c.classList.add('sel');
-    c.textContent=d; c.onclick=()=>{ document.getElementById('date').value=ds; tabs.find(t=>t.dataset.panel==='entry').click(); };
-    grid.append(c);
-  }
-  el.append(grid);
-
-  prev.onclick=()=>renderMiniCal(targetId,new Date(y,m-1,1));
-  next.onclick=()=>renderMiniCal(targetId,new Date(y,m+1,1));
-}
-renderMiniCal('miniCal');
-
 /* init defaults */
 document.getElementById('date').value = new Date().toISOString().slice(0,10);
 refreshEquipmentSelects();
 renderAnalytics();
 renderHistory();
-showStartLanePill();
 </script>
 </body>
 </html>
